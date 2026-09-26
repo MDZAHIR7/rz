@@ -234,7 +234,7 @@
   /* ------------------------------------------------------------------ before the tap */
   // Lay out the courtyard under the opaque doorway and promote what will move, in idle time,
   // so none of that work lands on the tap. The FLIP flight is measured here too.
-  const MOVERS = '#leafL, #leafR, #portal, #seal, #sealShadow, #wall, #glowCore, #bloom, #spill, #hint, #for, #hero, #lattice, .court-bg img, .wipe .win, .wipe .con, .glint i, .sheen i, #meaning, #openingOrn, #brideP, #with, #jl, #jr, #groomP, #dateHint, #arc, #dateText, #hijri';
+  const MOVERS = '#leafL, #leafR, #portal, #seal, #sealShadow, #wall, #glowCore, #bloom, #spill, #hint, #for, #hero, #lattice, .court-bg img, .wipe .win, .wipe .con, .glint i, .sheen i, #meaning, #openingOrn, #heroLines, #brideP, #with, #jl, #jr, #groomP, #times, #venueLine, #dateHint, #arc, #dateText, #hijri';
   const idle = window.requestIdleCallback || ((f) => setTimeout(f, 250));
   function prime() {
     if (primed) return;
@@ -338,9 +338,11 @@
       wipe(bism, B, 1700, 'rtl');
       anim(bism.querySelector('.glint i'), [{ transform: 'translateX(300%)' }, { transform: 'translateX(-130%)' }], { delay: B + 150, duration: 1700, easing: E.wipe, fill: 'none' });
       fadeUp($('meaning'), B + 1350);
+      fadeUp($('heroLines'), B + 1750, 1100);
     } else {
       anim($('openingOrn'), [{ opacity: 0, transform: 'scaleX(0.3)' }, { opacity: 1, transform: 'scaleX(1)' }], { delay: B - 200, duration: 800, easing: E.out });
       wipe($('opening'), B, 1500, 'ltr');
+      fadeUp($('heroLines'), B + 1200, 1100);
     }
     // 4. "with" has appeared between the names; now the names, bride first
     wipe($('bride'), 4600, 1000, 'ltr');
@@ -351,7 +353,9 @@
     anim($('arc'), [{ opacity: 0, transform: 'rotate(-28deg)' }, { opacity: 1, transform: 'none' }], { delay: 5900, duration: 1400, easing: E.out });
     fadeUp($('dateText'), 6100);
     if (MUSLIM) fadeIn($('hijri'), 6700);
-    fadeIn($('dateHint'), 7100);
+    fadeIn($('times'), 6450);
+    fadeIn($('venueLine'), 6850);
+    fadeIn($('dateHint'), 7250);
   }
 
   function gentle() {
@@ -359,8 +363,8 @@
     anim(stage, [{ opacity: 1 }, { opacity: 0 }], { duration: 900, easing: 'ease-in-out' });
     anim(hero, [{ opacity: 0 }, { opacity: 1 }], { delay: 400, duration: 1000, easing: 'ease-out' });
     const seq = MUSLIM
-      ? [['bism', 900], ['meaning', 1250], ['bride', 1550], ['brideP', 1750], ['joint', 1850], ['groom', 1950], ['groomP', 2150], ['arc', 2400], ['dateText', 2500], ['hijri', 2800], ['dateHint', 3000]]
-      : [['openingOrn', 900], ['opening', 1000], ['bride', 1400], ['brideP', 1600], ['joint', 1700], ['groom', 1800], ['groomP', 2000], ['arc', 2300], ['dateText', 2400], ['dateHint', 2700]];
+      ? [['bism', 900], ['meaning', 1250], ['heroLines', 1400], ['bride', 1550], ['brideP', 1750], ['joint', 1850], ['groom', 1950], ['groomP', 2150], ['arc', 2400], ['dateText', 2500], ['times', 2650], ['hijri', 2800], ['venueLine', 2900], ['dateHint', 3100]]
+      : [['openingOrn', 900], ['opening', 1000], ['heroLines', 1200], ['bride', 1400], ['brideP', 1600], ['joint', 1700], ['groom', 1800], ['groomP', 2000], ['dateText', 2400], ['times', 2550], ['venueLine', 2700], ['dateHint', 2900]];
     for (const [id, d] of seq) fadeIn($(id), d, 800);
   }
 
@@ -480,7 +484,7 @@
     const n = hallTop.getBoundingClientRect().top < -40;
     if (n === inHall) return;
     inHall = n;
-    if (themeMeta) themeMeta.setAttribute('content', n ? '#3F0C18' : '#D5CCC1');
+    if (themeMeta) themeMeta.setAttribute('content', n ? '#4A0F1D' : '#D5CCC1');
   }
   addEventListener('scroll', () => { if (!hq) hq = requestAnimationFrame(hallCheck); }, { passive: true });
 
@@ -519,7 +523,7 @@
   /* ------------------------------------------------------------------ the letter arrives as you read: each block rises into place
      once, mehndi dividers draw themselves, cards catch a band of light, and the close ends in a shower of petals */
   if (IO && !REDUCED) {
-    const groups = ['.verse blockquote > *', '.invitation > p', '.events-day', '.cards > .card', '.venue-name, .venue-addr, .actions',
+    const groups = ['.sprig', '.verse blockquote > *', '.invitation > p', '.events-day', '.cards > .card', '.venue-name, .venue-addr, .actions',
       '.cd-row, .cd-until', '.dua > *', '.rsvp-card', '.closing > *:not(.mono-end)'];
     const seen = new Set();
     groups.forEach((sel) => document.querySelectorAll(sel).forEach((el, i) => { if (!seen.has(el)) { seen.add(el); el.classList.add('rv'); el.style.setProperty('--rv', String(i)); } }));
