@@ -17,7 +17,7 @@
   const stage = $('stage'), hero = $('hero'), seal = $('seal'), sealShadow = $('sealShadow');
   const audio = $('nasheed'), muteBtn = $('mute');
   const courtImg = document.querySelector('.court-bg img');
-  const monoImg = document.querySelector('#mono img');
+  const joint = $('joint');                            // where the seal lands and becomes the word "with"
 
   if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
   scrollTo(0, 0);
@@ -217,8 +217,8 @@
   }
   const unit = () => stage.querySelector('.box').getBoundingClientRect().width / 390;
   function measure() {
-    const s = seal.getBoundingClientRect(), m = monoImg.getBoundingClientRect();
-    geo = { dx: m.left + m.width / 2 - (s.left + s.width / 2), dy: m.top + m.height / 2 - (s.top + s.height / 2), k: m.width / s.width };
+    const s = seal.getBoundingClientRect(), m = joint.getBoundingClientRect();
+    geo = { dx: m.left + m.width / 2 - (s.left + s.width / 2), dy: m.top + m.height / 2 - (s.top + s.height / 2), k: 0.55 };
   }
   function wipe(el, delay, dur, dir) {
     if (!el) return;
@@ -234,7 +234,7 @@
   /* ------------------------------------------------------------------ before the tap */
   // Lay out the courtyard under the opaque doorway and promote what will move, in idle time,
   // so none of that work lands on the tap. The FLIP flight is measured here too.
-  const MOVERS = '#leafL, #leafR, #portal, #seal, #sealShadow, #wall, #glowCore, #bloom, #spill, #hint, #for, #hero, #lattice, .court-bg img, .wipe .win, .wipe .con, .glint i, .sheen i, #meaning, #openingOrn, #brideP, #with, #groomP, #mono img, #arc, #dateText, #hijri';
+  const MOVERS = '#leafL, #leafR, #portal, #seal, #sealShadow, #wall, #glowCore, #bloom, #spill, #hint, #for, #hero, #lattice, .court-bg img, .wipe .win, .wipe .con, .glint i, .sheen i, #meaning, #openingOrn, #brideP, #with, #jl, #jr, #groomP, #dateHint, #arc, #dateText, #hijri';
   const idle = window.requestIdleCallback || ((f) => setTimeout(f, 250));
   function prime() {
     if (primed) return;
@@ -281,7 +281,8 @@
       { transform: hover, offset: 2000 / T_LAND, easing: E.flight },
       { transform: `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px) scale(${k.toFixed(4)})`, offset: 1 },
     ], { duration: T_LAND });
-    anim(seal, [{ opacity: 1 }, { opacity: 1, offset: 0.995 }, { opacity: 0 }], { duration: T_LAND + 40 });
+    // it does not land as a logo: over the last stretch of its flight it dissolves into the word that joins the names
+    anim(seal, [{ opacity: 1 }, { opacity: 1, offset: 0.8 }, { opacity: 0 }], { duration: T_LAND + 40 });
     anim(sealShadow, [
       { opacity: 0, transform: 'none', offset: 0 },
       { opacity: 0, transform: 'none', offset: 150 / 2800 },
@@ -289,7 +290,9 @@
       { opacity: 0.7, transform: `translate(${(4 * u).toFixed(1)}px, ${(14 * u).toFixed(1)}px) scale(1.12)`, offset: 2000 / 2800 },
       { opacity: 0, transform: `translate(${(5 * u).toFixed(1)}px, ${(18 * u).toFixed(1)}px) scale(1.16)`, offset: 1 },
     ], { duration: 2800 });
-    anim(monoImg, [{ opacity: 0 }, { opacity: 0, offset: 0.995 }, { opacity: 1 }], { duration: T_LAND });
+    anim($('with'), [{ opacity: 0, transform: 'scale(.82)' }, { opacity: 1, transform: 'none' }], { delay: T_LAND - 450, duration: 1200, easing: E.out });
+    anim($('jl'), [{ opacity: 0, transform: 'scaleX(0)' }, { opacity: 1, transform: 'none' }], { delay: T_LAND - 150, duration: 1100, easing: E.out });
+    anim($('jr'), [{ opacity: 0, transform: 'scaleX(0)' }, { opacity: 1, transform: 'none' }], { delay: T_LAND - 150, duration: 1100, easing: E.out });
 
     // 1. the jali doors swing inward; the sun blooms in the far arch; the mirror inlays catch it once
     anim($('leafL'), [{ transform: 'rotateY(0deg)' }, { transform: 'rotateY(84deg)' }], { delay: 450, duration: 2000, easing: E.door });
@@ -339,17 +342,16 @@
       anim($('openingOrn'), [{ opacity: 0, transform: 'scaleX(0.3)' }, { opacity: 1, transform: 'scaleX(1)' }], { delay: B - 200, duration: 800, easing: E.out });
       wipe($('opening'), B, 1500, 'ltr');
     }
-    // 4. the monogram has landed between the names; one foil sheen, then the names, bride first
-    sweep(document.querySelector('#mono .sheen i'), T_LAND + 250, 1300);
+    // 4. "with" has appeared between the names; now the names, bride first
     wipe($('bride'), 4600, 1000, 'ltr');
     fadeIn($('brideP'), 5100);
-    fadeIn($('with'), 5150, 700);
     wipe($('groom'), 5250, 1000, 'ltr');
     fadeIn($('groomP'), 5750);
     // 5. the open gold ring of the logo turns into place around the date
     anim($('arc'), [{ opacity: 0, transform: 'rotate(-28deg)' }, { opacity: 1, transform: 'none' }], { delay: 5900, duration: 1400, easing: E.out });
     fadeUp($('dateText'), 6100);
     if (MUSLIM) fadeIn($('hijri'), 6700);
+    fadeIn($('dateHint'), 7100);
   }
 
   function gentle() {
@@ -357,8 +359,8 @@
     anim(stage, [{ opacity: 1 }, { opacity: 0 }], { duration: 900, easing: 'ease-in-out' });
     anim(hero, [{ opacity: 0 }, { opacity: 1 }], { delay: 400, duration: 1000, easing: 'ease-out' });
     const seq = MUSLIM
-      ? [['bism', 900], ['meaning', 1250], ['bride', 1550], ['brideP', 1750], ['with', 1850], ['groom', 1950], ['groomP', 2150], ['arc', 2400], ['dateText', 2500], ['hijri', 2800]]
-      : [['openingOrn', 900], ['opening', 1000], ['bride', 1400], ['brideP', 1600], ['with', 1700], ['groom', 1800], ['groomP', 2000], ['arc', 2300], ['dateText', 2400]];
+      ? [['bism', 900], ['meaning', 1250], ['bride', 1550], ['brideP', 1750], ['joint', 1850], ['groom', 1950], ['groomP', 2150], ['arc', 2400], ['dateText', 2500], ['hijri', 2800], ['dateHint', 3000]]
+      : [['openingOrn', 900], ['opening', 1000], ['bride', 1400], ['brideP', 1600], ['joint', 1700], ['groom', 1800], ['groomP', 2000], ['arc', 2300], ['dateText', 2400], ['dateHint', 2700]];
     for (const [id, d] of seq) fadeIn($(id), d, 800);
   }
 
@@ -419,11 +421,10 @@
     if (DEMO) setTimeout(demoScroll, 800);
   }
 
-  $('mono').addEventListener('click', () => {
+  joint.addEventListener('click', () => {
     if (!settled) return;
-    const r = monoImg.getBoundingClientRect();
-    petals.burst(r.left + r.width / 2, r.top + r.height / 2, 24, { w: r.width * 0.5, h: r.height * 0.4 });
-    if (!REDUCED) document.querySelector('#mono .sheen i').animate([{ transform: 'translateX(-120%)' }, { transform: 'translateX(300%)' }], { duration: 1300, easing: E.inOut });
+    const r = joint.getBoundingClientRect();
+    petals.burst(r.left + r.width / 2, r.top + r.height / 2, 24, { w: r.width * 0.5, h: r.height * 0.6 });
     try { if (navigator.vibrate) navigator.vibrate(8); } catch (err) {}
   });
 
@@ -612,19 +613,30 @@
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 4000);
   }
-  const calBtn = $('calendar'), calMore = $('cal-more');
-  calBtn.addEventListener('click', () => {
-    if (ANDROID) {
-      if ((CFG.gcal || []).length === 1) { window.open(CFG.gcal[0], '_blank', 'noopener'); return; }
-      const show = calMore.hidden;
-      calMore.hidden = !show;
-      calMore.classList.toggle('show', show);
-      calBtn.setAttribute('aria-expanded', String(show));
-      return;
-    }
-    downloadIcs();
-  });
-  $('icsAll').addEventListener('click', downloadIcs);
+  // "Save the date": a sheet from the bottom, opened by tapping the date on the first screen or "Add to calendar".
+  // The phone's own calendar comes first (iPhone opens its event sheet; Android opens the calendar file), then Google.
+  const sheet = $('calSheet'), sheetIcs = $('sheetIcs');
+  let sheetFrom = null, sheetT = 0;
+  function openSheet(from) {
+    sheetFrom = from || null;
+    if (sheet.parentNode !== document.body) document.body.appendChild(sheet);   // above everything, the music control too
+    clearTimeout(sheetT);
+    sheet.hidden = false;
+    requestAnimationFrame(() => requestAnimationFrame(() => sheet.classList.add('open')));
+    sheetIcs.focus({ preventScroll: true });
+  }
+  function closeSheet() {
+    sheet.classList.remove('open');
+    sheetT = setTimeout(() => { sheet.hidden = true; }, 450);
+    if (sheetFrom) sheetFrom.focus({ preventScroll: true });
+  }
+  sheet.addEventListener('click', (e) => { if (e.target.closest('[data-close]')) closeSheet(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !sheet.hidden) closeSheet(); });
+  sheetIcs.addEventListener('click', downloadIcs);
+  const calBtn = $('calendar'), dateEl = $('date');
+  calBtn.addEventListener('click', () => openSheet(calBtn));
+  dateEl.addEventListener('click', () => { if (settled) openSheet(dateEl); });
+  dateEl.addEventListener('keydown', (e) => { if (settled && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openSheet(dateEl); } });
 
   /* ------------------------------------------------------------------ RSVP (design only until an endpoint is set) */
   const form = $('rsvp');
@@ -652,8 +664,8 @@
     const ev = CFG.eventsWords || 'wedding';
     if (MUSLIM) {
       return p.attending
-        ? `Assalamu alaikum ${CFG.couple}! This is ${p.name}. In sha Allah, ${p.guests > 1 ? `we (${p.guests} guests) will` : 'I will'} be at your ${ev}. Barakallahu lakuma!`
-        : `Assalamu alaikum ${CFG.couple}! This is ${p.name}. I'm sorry I can't make it to your ${ev}, but you are both in my duas. Barakallahu lakuma!`;
+        ? `Assalamu alaikum wa rahmatullahi wa barakatuh, ${CFG.couple}! This is ${p.name}. In sha Allah, ${p.guests > 1 ? `we (${p.guests} guests) will` : 'I will'} be at your ${ev}. Barakallahu lakuma!`
+        : `Assalamu alaikum wa rahmatullahi wa barakatuh, ${CFG.couple}! This is ${p.name}. I'm sorry I can't make it to your ${ev}, but you are both in my duas. Barakallahu lakuma!`;
     }
     return p.attending
       ? `Hi ${CFG.couple}! This is ${p.name}. Joyfully attending your ${ev}${p.guests > 1 ? `, ${p.guests} of us` : ''}. See you there!`
