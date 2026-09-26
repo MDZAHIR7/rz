@@ -166,7 +166,8 @@ html.js:not(.primed) .court-bg { visibility: hidden; }
 }
 .name .con { text-align: center; }
 .parent { display: block; margin-top: calc(3 * var(--u)); font: italic calc(15.5 * var(--u)) / 1.3 var(--text); color: var(--ink-2); }
-.mono { position: relative; display: block; width: calc(104 * var(--u)); height: calc(94.86 * var(--u)); margin: calc(15 * var(--u)) 0 calc(13 * var(--u)); }
+.mono { position: relative; display: block; width: calc(88 * var(--u)); height: calc(80.27 * var(--u)); margin: calc(12 * var(--u)) 0 0; }
+.with { display: block; margin: calc(2 * var(--u)) 0 calc(10 * var(--u)); font: italic calc(18 * var(--u)) / 1.1 var(--text); color: var(--gold-ink); letter-spacing: .06em; }
 .mono img, .seal img { width: 100%; height: 100%; }
 
 .date { left: calc(122 * var(--u)); top: calc(548 * var(--u)); width: calc(146 * var(--u)); height: calc(146 * var(--u)); display: grid; place-items: center; }

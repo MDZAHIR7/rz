@@ -234,7 +234,7 @@
   /* ------------------------------------------------------------------ before the tap */
   // Lay out the courtyard under the opaque doorway and promote what will move, in idle time,
   // so none of that work lands on the tap. The FLIP flight is measured here too.
-  const MOVERS = '#leafL, #leafR, #portal, #seal, #sealShadow, #wall, #glowCore, #bloom, #spill, #hint, #for, #hero, #lattice, .court-bg img, .wipe .win, .wipe .con, .glint i, .sheen i, #meaning, #openingOrn, #brideP, #groomP, #mono img, #arc, #dateText, #hijri';
+  const MOVERS = '#leafL, #leafR, #portal, #seal, #sealShadow, #wall, #glowCore, #bloom, #spill, #hint, #for, #hero, #lattice, .court-bg img, .wipe .win, .wipe .con, .glint i, .sheen i, #meaning, #openingOrn, #brideP, #with, #groomP, #mono img, #arc, #dateText, #hijri';
   const idle = window.requestIdleCallback || ((f) => setTimeout(f, 250));
   function prime() {
     if (primed) return;
@@ -343,6 +343,7 @@
     sweep(document.querySelector('#mono .sheen i'), T_LAND + 250, 1300);
     wipe($('bride'), 4600, 1000, 'ltr');
     fadeIn($('brideP'), 5100);
+    fadeIn($('with'), 5150, 700);
     wipe($('groom'), 5250, 1000, 'ltr');
     fadeIn($('groomP'), 5750);
     // 5. the open gold ring of the logo turns into place around the date
@@ -356,8 +357,8 @@
     anim(stage, [{ opacity: 1 }, { opacity: 0 }], { duration: 900, easing: 'ease-in-out' });
     anim(hero, [{ opacity: 0 }, { opacity: 1 }], { delay: 400, duration: 1000, easing: 'ease-out' });
     const seq = MUSLIM
-      ? [['bism', 900], ['meaning', 1250], ['bride', 1550], ['brideP', 1750], ['groom', 1950], ['groomP', 2150], ['arc', 2400], ['dateText', 2500], ['hijri', 2800]]
-      : [['openingOrn', 900], ['opening', 1000], ['bride', 1400], ['brideP', 1600], ['groom', 1800], ['groomP', 2000], ['arc', 2300], ['dateText', 2400]];
+      ? [['bism', 900], ['meaning', 1250], ['bride', 1550], ['brideP', 1750], ['with', 1850], ['groom', 1950], ['groomP', 2150], ['arc', 2400], ['dateText', 2500], ['hijri', 2800]]
+      : [['openingOrn', 900], ['opening', 1000], ['bride', 1400], ['brideP', 1600], ['with', 1700], ['groom', 1800], ['groomP', 2000], ['arc', 2300], ['dateText', 2400]];
     for (const [id, d] of seq) fadeIn($(id), d, 800);
   }
 
