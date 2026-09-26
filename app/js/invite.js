@@ -6,6 +6,11 @@
   const root = document.documentElement;
   if (!root.classList.contains('js')) return;          // the head failsafe already fell back to the static page
   window.INVITE_BOOTED = true;
+  root.classList.add('booted');                       // the tap hint shows only once a tap will be answered
+  // the stele's faces are asked for now, not when its words first show: on a weak line that is seconds later
+  if (document.fonts && document.fonts.load) {
+    for (const f of ['40px "Great Vibes"', '16px "EB Garamond"', 'italic 16px "DM Serif Display"']) document.fonts.load(f).catch(() => {});
+  }
 
   const CFG = window.INVITE_CONFIG || {};
   const $ = (id) => document.getElementById(id);
@@ -436,6 +441,7 @@
   stage.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
   });
+  if (window.INVITE_TAPPED) setTimeout(open, 0);   // tapped while the script was still on its way (weak wifi); after init
   document.addEventListener('click', (e) => { if (opened && !settled && !stage.contains(e.target)) skip(); });
 
   /* ------------------------------------------------------------------ the music control keeps to a free corner:

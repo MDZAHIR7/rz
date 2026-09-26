@@ -640,6 +640,9 @@ html.no-js .stage { display: none; }
 }
 .stage.has-for .hint { top: calc(816 * var(--u)); font-size: calc(15.5 * var(--u)); }
 @keyframes hint { from { opacity: .6; } to { opacity: 1; } }
+html.js:not(.booted) .hint { opacity: 0; animation: none; }
+html.booted .hint { animation: hint-in .8s ease-out both, hint 3.4s ease-in-out .8s infinite alternate; }
+@keyframes hint-in { from { opacity: 0; } to { opacity: .6; } }
 .stage:focus-visible .hint { text-decoration: underline; text-decoration-color: rgba(150, 97, 32, .6); text-underline-offset: .3em; text-decoration-thickness: 1px; }
 
 /* ================================================================ save the date (a sheet from the bottom) */

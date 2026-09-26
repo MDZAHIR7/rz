@@ -15,8 +15,14 @@
   };
   let raw;
   try { raw = bytes(sealed.textContent.trim()); } catch (e) { fail(); return; }
+  // On a weak line the doors come first: the invitation (and every picture in it) joins the page once the door
+  // pictures have arrived, so they get the whole connection. Never waits more than a few seconds.
+  const doors = [...document.querySelectorAll('.stage img[fetchpriority="high"]')].filter((i) => !i.complete)
+    .map((i) => new Promise((r) => { i.addEventListener('load', r, { once: true }); i.addEventListener('error', r, { once: true }); }));
+  const doorsIn = Promise.race([Promise.all(doors), new Promise((r) => setTimeout(r, 4000))]);
   crypto.subtle.importKey('raw', bytes(m[1]), 'AES-GCM', false, ['decrypt'])
     .then((key) => crypto.subtle.decrypt({ name: 'AES-GCM', iv: raw.slice(0, 12) }, key, raw.slice(12)))
+    .then((buf) => doorsIn.then(() => buf))
     .then((buf) => {
       const d = JSON.parse(new TextDecoder().decode(buf));
       document.title = d.title;
