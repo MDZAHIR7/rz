@@ -100,17 +100,18 @@
     addEventListener('resize', size);
     function add(n, from) {
       if (REDUCED) return;
+      if (parts.length > 220) n = Math.min(n, 4);          // however many taps, the sky never fills
       prep();
       for (let i = 0; i < n; i++) {
         const roll = Math.random(), gold = roll < 0.18, mogra = !gold && roll < 0.4, z = 0.55 + Math.random() * 0.75;   // z: nearer is larger, faster
         const p = {
           img: gold ? sprites.gold[i % 2] : mogra ? sprites.mogra : sprites.petal[Math.floor(Math.random() * 4)], gold, z,
-          size: (gold ? 11 : 17) * z, x: 0, y: 0, vx: 0, vy: 0, fall: (85 + Math.random() * 75) * z, life: 6 + Math.random() * 2.5,
+          size: (gold ? 11 : 17) * z, x: 0, y: 0, vx: 0, vy: 0, fall: (85 + Math.random() * 75) * z, life: from && from.pop ? 2.2 + Math.random() * 1.3 : 6 + Math.random() * 2.5,
           sway: 14 + Math.random() * 26, sf: 0.6 + Math.random() * 1.1, sp: Math.random() * 6.28,
           rot: Math.random() * 6.28, vr: (Math.random() - 0.5) * 2.4, flip: Math.random() * 6.28, vf: 1.5 + Math.random() * 3.2, t: 0, delay: 0,
         };
         if (from) {      // thrown out of a point, then settling into the fall
-          const a = Math.random() * Math.PI * 2, v = 90 + Math.random() * 260;
+          const a = Math.random() * Math.PI * 2, v = (from.pop ? 150 : 90) + Math.random() * 260;   // a tap's pop is brisker and brief
           p.x = from.x + (Math.random() - 0.5) * (from.w || 0); p.y = from.y + (Math.random() - 0.5) * (from.h || 0);
           p.vx = Math.cos(a) * v; p.vy = Math.sin(a) * v * 0.8 - 120; p.delay = Math.random() * (from.spread || 0);
         } else {         // drifting down from above
@@ -338,17 +339,11 @@
 
     // 3. the opening words, caught by light (Arabic right to left, English left to right)
     const B = 3300;
-    if (MUSLIM) {
-      const bism = $('bism');
-      wipe(bism, B, 1700, 'rtl');
-      anim(bism.querySelector('.glint i'), [{ transform: 'translateX(300%)' }, { transform: 'translateX(-130%)' }], { delay: B + 150, duration: 1700, easing: E.wipe, fill: 'none' });
-      fadeUp($('meaning'), B + 1350);
-      fadeUp($('heroLines'), B + 1750, 1100);
-    } else {
-      anim($('openingOrn'), [{ opacity: 0, transform: 'scaleX(0.3)' }, { opacity: 1, transform: 'scaleX(1)' }], { delay: B - 200, duration: 800, easing: E.out });
-      wipe($('opening'), B, 1500, 'ltr');
-      fadeUp($('heroLines'), B + 1200, 1100);
-    }
+    const bism = $('bism');                       // every version opens with the Bismillah in calligraphy, its meaning beneath
+    wipe(bism, B, 1700, 'rtl');
+    anim(bism.querySelector('.glint i'), [{ transform: 'translateX(300%)' }, { transform: 'translateX(-130%)' }], { delay: B + 150, duration: 1700, easing: E.wipe, fill: 'none' });
+    fadeUp($('meaning'), B + 1350);
+    fadeUp($('heroLines'), B + 1750, 1100);
     // 4. "with" has appeared between the names; now the names, bride first
     wipe($('bride'), 4600, 1000, 'ltr');
     fadeIn($('brideP'), 5100);
@@ -357,7 +352,7 @@
     // 5. the open gold ring of the logo turns into place around the date
     anim($('arc'), [{ opacity: 0, transform: 'rotate(-28deg)' }, { opacity: 1, transform: 'none' }], { delay: 5900, duration: 1400, easing: E.out });
     fadeUp($('dateText'), 6100);
-    if (MUSLIM) fadeIn($('hijri'), 6700);
+    if ($('hijri')) fadeIn($('hijri'), 6300);
     fadeIn($('times'), 6450);
     fadeIn($('venueLine'), 6850);
     fadeIn($('dateHint'), 7250);
@@ -367,9 +362,8 @@
     anim(seal, [{ opacity: 1 }, { opacity: 0 }], { duration: 350, easing: 'ease-out' });
     anim(stage, [{ opacity: 1 }, { opacity: 0 }], { duration: 900, easing: 'ease-in-out' });
     anim(hero, [{ opacity: 0 }, { opacity: 1 }], { delay: 400, duration: 1000, easing: 'ease-out' });
-    const seq = MUSLIM
-      ? [['bism', 900], ['meaning', 1250], ['heroLines', 1400], ['bride', 1550], ['brideP', 1750], ['joint', 1850], ['groom', 1950], ['groomP', 2150], ['arc', 2400], ['dateText', 2500], ['times', 2650], ['hijri', 2800], ['venueLine', 2900], ['dateHint', 3100]]
-      : [['openingOrn', 900], ['opening', 1000], ['heroLines', 1200], ['bride', 1400], ['brideP', 1600], ['joint', 1700], ['groom', 1800], ['groomP', 2000], ['dateText', 2400], ['times', 2550], ['venueLine', 2700], ['dateHint', 2900]];
+    const seq = [['bism', 900], ['meaning', 1250], ['heroLines', 1400], ['bride', 1550], ['brideP', 1750], ['joint', 1850], ['groom', 1950], ['groomP', 2150], ['arc', 2400], ['dateText', 2500], ['hijri', 2600], ['times', 2700], ['venueLine', 2900], ['dateHint', 3100]]
+      .filter(([id]) => $(id));
     for (const [id, d] of seq) fadeIn($(id), d, 800);
   }
 
@@ -430,11 +424,21 @@
     if (DEMO) setTimeout(demoScroll, 800);
   }
 
-  joint.addEventListener('click', () => {
-    if (!settled) return;
-    const r = joint.getBoundingClientRect();
-    petals.burst(r.left + r.width / 2, r.top + r.height / 2, 24, { w: r.width * 0.5, h: r.height * 0.6 });
-    try { if (navigator.vibrate) navigator.vibrate(8); } catch (err) {}
+  // once the invitation is open, a tap anywhere lets a little shower of petals loose where the finger lands
+  // ("with" gives a fuller one); typing, the calendar sheet and the music button stay calm
+  let lastPop = 0;
+  document.addEventListener('click', (e) => {
+    if (!settled || REDUCED) return;
+    const t = e.target;
+    if (!(t instanceof Element) || t.closest('input[type="text"], input[type="tel"], textarea, select, .sheet, .mute')) return;
+    const now = performance.now();
+    if (now - lastPop < 150) return;
+    lastPop = now;
+    let x = e.clientX, y = e.clientY;
+    if (!e.detail) { const r = t.getBoundingClientRect(); x = r.left + r.width / 2; y = r.top + r.height / 2; }   // keyboard: from the control
+    const onWith = joint.contains(t);
+    petals.burst(x, y, onWith ? 24 : 14, { w: 18, h: 18, pop: true });
+    try { if (navigator.vibrate) navigator.vibrate(onWith ? 8 : 5); } catch (err) {}
   });
 
   stage.addEventListener('click', open);
@@ -452,7 +456,7 @@
     let slotFree = true, down = false, lastY = scrollY, idleT = 0, io = null;
     const update = () => muteBtn.classList.toggle('show', slotFree && !down);
     const targets = document.querySelectorAll('.hbox .bism, .hbox .meaning, .hbox .opening, .hbox .names, .hbox .date, .hbox .hijri, ' +
-      '.rest > section > *:not(.cards):not(.rsvp-card), .cards > .card, .rsvp-card > *, .rsvp-form > *, .closing > *, .credits');
+      '.rest > section > *:not(.cards):not(.rsvp-card), .cards > .scroll, .rsvp-card > *, .rsvp-form > *, .closing > *, .credits');
     function observe() {
       if (io) io.disconnect();
       busy.clear();
@@ -529,7 +533,7 @@
   /* ------------------------------------------------------------------ the letter arrives as you read: each block rises into place
      once, mehndi dividers draw themselves, cards catch a band of light, and the close ends in a shower of petals */
   if (IO && !REDUCED) {
-    const groups = ['.sprig', '.verse blockquote > *', '.invitation > p', '.events-day', '.cards > .card', '.venue-name, .venue-addr, .actions',
+    const groups = ['.sprig', '.verse blockquote > *', '.invitation > p', '.events-day', '.cards > .scroll', '.venue-label, .venue-name, .venue-addr, .actions',
       '.cd-row, .cd-until', '.dua > *', '.rsvp-card', '.closing > *:not(.mono-end)'];
     const seen = new Set();
     groups.forEach((sel) => document.querySelectorAll(sel).forEach((el, i) => { if (!seen.has(el)) { seen.add(el); el.classList.add('rv'); el.style.setProperty('--rv', String(i)); } }));
@@ -586,6 +590,13 @@
   let tickT = 0;
   const cd = { D: $('cdD'), H: $('cdH'), M: $('cdM'), S: $('cdS'), DL: $('cdDL'), HL: $('cdHL'), ML: $('cdML'), SL: $('cdSL') };
   const set = (el, s) => { if (el && el.textContent !== s) el.textContent = s; };
+  // a changed number rolls into its niche (the text changes once a second; one short transform per changed unit)
+  const roll = (el, s) => {
+    if (!el || el.textContent === s) return;
+    const first = el.textContent === '–';
+    el.textContent = s;
+    if (!first && !REDUCED && el.animate) el.animate([{ transform: 'translateY(-38%)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 420, easing: 'cubic-bezier(.2,.8,.3,1)' });
+  };
   function tick() {
     clearTimeout(tickT);
     if (!target || !cd.D) return;
@@ -602,7 +613,7 @@
     }
     const secs = Math.floor(ms / 1000), mins = Math.floor(secs / 60);
     const d = Math.floor(mins / 1440), h = Math.floor((mins % 1440) / 60), m = mins % 60, sec = secs % 60;
-    set(cd.D, String(d)); set(cd.H, String(h).padStart(2, '0')); set(cd.M, String(m).padStart(2, '0')); set(cd.S, String(sec).padStart(2, '0'));
+    roll(cd.D, String(d)); roll(cd.H, String(h).padStart(2, '0')); roll(cd.M, String(m).padStart(2, '0')); roll(cd.S, String(sec).padStart(2, '0'));
     set(cd.DL, d === 1 ? 'day' : 'days'); set(cd.HL, h === 1 ? 'hour' : 'hours'); set(cd.ML, m === 1 ? 'minute' : 'minutes'); set(cd.SL, sec === 1 ? 'second' : 'seconds');
     set($('cdText'), `${d} ${d === 1 ? 'day' : 'days'}, ${h} ${h === 1 ? 'hour' : 'hours'} and ${m} ${m === 1 ? 'minute' : 'minutes'} ${$('cd-until').textContent}`);
     tickT = setTimeout(tick, (ms % 1000) + 30);
