@@ -134,12 +134,16 @@ html.js:not(.primed) .court-bg { visibility: hidden; }
 .wipe.ltr .win { left: 0; -webkit-mask-image: linear-gradient(to left, transparent 0, #000 23.08%); mask-image: linear-gradient(to left, transparent 0, #000 23.08%); }
 .wipe.ltr .con { left: 0; }
 
-.bism { left: calc(70 * var(--u)); top: calc(124 * var(--u)); width: calc(250 * var(--u)); height: calc(60 * var(--u)); }
+/* the Bismillah in its arch-shaped (dome) composition, filling the pointed top of the stele's inner arch */
+.bism { left: calc(103 * var(--u)); top: calc(64 * var(--u)); width: calc(184 * var(--u)); height: calc(110.4 * var(--u)); }
 .bism img { width: 100%; height: 100%; }
+/* the English-only versions carry no Arabic: a gilded rosette sits in the arch instead */
+.bism--orn { left: calc(165 * var(--u)); top: calc(96 * var(--u)); width: calc(60 * var(--u)); height: calc(60 * var(--u)); }
 .glint {
   position: absolute; inset: 0; overflow: hidden; pointer-events: none;
-  -webkit-mask: url(../img/bismillah.webp) center / 100% 100% no-repeat; mask: url(../img/bismillah.webp) center / 100% 100% no-repeat;
+  -webkit-mask: url(../img/bismillah-arch.webp) center / 100% 100% no-repeat; mask: url(../img/bismillah-arch.webp) center / 100% 100% no-repeat;
 }
+.bism--orn .glint { -webkit-mask-image: url(../img/rosette.webp); mask-image: url(../img/rosette.webp); }
 .sheen {
   position: absolute; inset: 0; overflow: hidden; pointer-events: none;
   -webkit-mask: url(../img/rz-monogram.svg) center / 100% 100% no-repeat; mask: url(../img/rz-monogram.svg) center / 100% 100% no-repeat;
@@ -149,13 +153,17 @@ html.js:not(.primed) .court-bg { visibility: hidden; }
   background: linear-gradient(105deg, rgba(255, 238, 200, 0) 20%, rgba(255, 244, 214, .95) 50%, rgba(255, 238, 200, 0) 80%);
   transform: translateX(-120%);
 }
-.glint i { width: 38%; transform: translateX(300%); }
-/* once the page has settled, a golden shimmer keeps travelling across the Bismillah, right to left like the script */
-html.settled .glint i { animation: bism-shimmer 5.5s ease-in-out 1s infinite; }
-@keyframes bism-shimmer { 0% { transform: translateX(300%); } 38%, 100% { transform: translateX(-130%); } }
+/* light passing through the gold: a broad warm band with a white-hot core, and a thin second glint just behind it */
+.glint i { width: 42%; top: -20%; bottom: -20%; transform: translateX(260%);
+  background: linear-gradient(105deg, rgba(255, 214, 120, 0) 12%, rgba(255, 222, 140, .5) 36%, rgba(255, 246, 214, .95) 50%, rgba(255, 222, 140, .5) 64%, rgba(255, 214, 120, 0) 88%); }
+.glint i.g2 { background: linear-gradient(105deg, rgba(255, 255, 240, 0) 44%, rgba(255, 255, 244, .9) 50%, rgba(255, 255, 240, 0) 56%); }
+/* once the page has settled, the light keeps passing across the Bismillah, right to left like the script, every few seconds */
+html.settled .glint i { animation: bism-shimmer 4.2s cubic-bezier(.45, .05, .35, 1) .6s infinite; }
+html.settled .glint i.g2 { animation-delay: .78s; }
+@keyframes bism-shimmer { 0% { transform: translateX(260%); } 42%, 100% { transform: translateX(-140%); } }
 
 .meaning {
-  left: calc(62 * var(--u)); width: calc(266 * var(--u)); top: calc(201 * var(--u));
+  left: calc(62 * var(--u)); width: calc(266 * var(--u)); top: calc(180 * var(--u));
   text-align: center; font: italic calc(15.5 * var(--u)) / 1.4 var(--text); color: var(--ink-2); text-wrap: balance;
 }
 .opening-orn { left: calc(165 * var(--u)); top: calc(78 * var(--u)); width: calc(60 * var(--u)); height: auto; }
@@ -165,20 +173,24 @@ html.settled .glint i { animation: bism-shimmer 5.5s ease-in-out 1s infinite; }
 }
 .opening .con { display: flex; align-items: center; justify-content: center; text-wrap: balance; padding: 0 calc(8 * var(--u)); }
 
-.lines { left: calc(50 * var(--u)); width: calc(290 * var(--u)); top: calc(254 * var(--u)); text-align: center; font: calc(10.4 * var(--u)) / 1.72 var(--text); letter-spacing: .14em; text-transform: uppercase; color: #5A4636; }
+.lines { left: calc(45 * var(--u)); width: calc(300 * var(--u)); top: calc(231 * var(--u)); text-align: center; font: calc(10.4 * var(--u)) / 1.72 var(--text); letter-spacing: .12em; text-transform: uppercase; color: #5A4636; }
 .lines span { display: block; }
+/* on a parents' card their names head the invitation, as on a printed card */
+.lines .host { margin-bottom: calc(4 * var(--u)); font: calc(17 * var(--u)) / 1.18 var(--display); letter-spacing: 0; text-transform: none; color: #33251B; }
 .names {
-  left: calc(30 * var(--u)); width: calc(330 * var(--u)); top: calc(312 * var(--u));
+  left: calc(30 * var(--u)); width: calc(330 * var(--u)); top: calc(var(--names-top, 312) * var(--u));
   display: flex; flex-direction: column; align-items: center; text-align: center;
 }
 .person { display: flex; flex-direction: column; align-items: center; width: 100%; }
 .name {
-  position: relative; display: block; width: 100%; height: calc(52 * var(--u));
-  font: calc(37 * var(--u)) / calc(52 * var(--u)) var(--script); color: #33251B; white-space: nowrap;
+  position: relative; display: block; width: 100%; height: calc(46 * var(--u));
+  font: calc(37 * var(--u)) / calc(46 * var(--u)) var(--script); color: #33251B; white-space: nowrap;
 }
 .name .con { text-align: center; }
-.parent { display: block; margin-top: calc(3 * var(--u)); font: italic calc(15.5 * var(--u)) / 1.3 var(--text); color: var(--ink-2); }
-.joint { display: flex; align-items: center; justify-content: center; gap: calc(12 * var(--u)); height: calc(30 * var(--u)); margin: calc(10 * var(--u)) 0 calc(6 * var(--u)); }
+.parent { display: block; margin-top: calc(3 * var(--u)); font: italic calc(14 * var(--u)) / 1.3 var(--text); color: var(--ink-2); }
+.parent > span { display: block; white-space: nowrap; }
+.parent:empty { display: none; }
+.joint { display: flex; align-items: center; justify-content: center; gap: calc(12 * var(--u)); height: calc(26 * var(--u)); margin: calc(5 * var(--u)) 0 calc(3 * var(--u)); }
 .with { display: block; font: italic calc(22 * var(--u)) / 1 var(--display); color: var(--gold-ink); letter-spacing: .01em; padding-bottom: calc(4 * var(--u)); }
 .jl, .jr { position: relative; display: block; width: calc(52 * var(--u)); height: 1px; background: linear-gradient(90deg, rgba(150, 97, 32, 0), var(--gold)); transform-origin: 100% 50%; }
 .jr { background: linear-gradient(90deg, var(--gold), rgba(150, 97, 32, 0)); transform-origin: 0 50%; }
@@ -400,9 +412,14 @@ html.no-js .countdown { display: none; }
 .closing { padding-top: calc(72 * var(--v)); }
 .closing .rosette { width: calc(30 * var(--v)); height: auto; margin: 0 auto calc(22 * var(--v)); }
 .closing-line { font: italic calc(19 * var(--v)) / 1.5 var(--text); color: var(--ink-2); text-wrap: balance; }
-.closing-sig { margin-top: calc(12 * var(--v)); font: calc(48 * var(--v)) / 1.2 var(--script); color: var(--ink); font-variation-settings: 'opsz' 56; letter-spacing: -.01em; }
+.closing-lead { margin-top: calc(22 * var(--v)); font: italic calc(17 * var(--v)) / 1.4 var(--text); color: var(--ink-2); }
+.closing-sig { margin-top: calc(2 * var(--v)); font: calc(48 * var(--v)) / 1.2 var(--script); color: var(--ink); font-variation-settings: 'opsz' 56; letter-spacing: -.01em; }
 .closing-fam { margin: calc(16 * var(--v)) auto 0; font: calc(17 * var(--v)) / 1.5 var(--text); color: var(--ink-2); }
 .closing-fam span { display: block; white-space: nowrap; }
+.closing-fam:empty { display: none; }
+.closing-sig span { display: block; white-space: nowrap; }
+/* a parents' signature: two names, one line each */
+.closing-sig--two { font-size: calc(36 * var(--v)); line-height: 1.25; }
 .cf-lead { margin-bottom: calc(6 * var(--v)); font: italic calc(15 * var(--v)) / 1.4 var(--text); letter-spacing: .01em; }
 .cf-name { font: calc(17.5 * var(--v)) / 1.55 var(--text); letter-spacing: .02em; }
 .closing-jzk { margin-top: calc(18 * var(--v)); font: italic calc(15.5 * var(--v)) / 1.3 var(--text); color: var(--gold-ink); letter-spacing: .01em; }
@@ -510,7 +527,7 @@ html.no-js .countdown { display: none; }
 
 .rest--hall .countdown { padding-top: 0; }
 .rest--hall .cd-row { filter: drop-shadow(0 3px 5px rgba(20, 0, 6, .6)); }
-.rest--hall .dua-lead, .rest--hall .dua .en, .rest--hall .translit, .rest--hall .closing-line, .rest--hall .closing-fam, .rest--hall .cd-until, .rest--hall .dua .ar { text-shadow: 0 2px 6px rgba(20, 0, 6, .55); }
+.rest--hall .dua-lead, .rest--hall .dua .en, .rest--hall .translit, .rest--hall .closing-line, .rest--hall .closing-lead, .rest--hall .closing-fam, .rest--hall .cd-until, .rest--hall .dua .ar { text-shadow: 0 2px 6px rgba(20, 0, 6, .55); }
 .rest--hall .cd-n {
   background: linear-gradient(172deg, #FBEBC4 0%, #E6C685 42%, #B88A42 74%, #EDD49A 100%);
   -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: var(--zari);
@@ -524,7 +541,7 @@ html.no-js .countdown { display: none; }
 .rest--hall .cd-n { font-size: calc(36 * var(--v)); overflow: hidden; padding: 0 calc(2 * var(--v)); }
 .rest--hall .cd-l { position: absolute; left: 0; right: 0; top: calc(84.5 * var(--v)); margin: 0; text-align: center;
   font: calc(8.4 * var(--v)) / 1 var(--text); font-style: normal; letter-spacing: .2em; text-transform: uppercase; padding-left: .2em; color: var(--zari); }
-.rest--hall .cd-l, .rest--hall .cd-done-sub, .rest--hall .translit, .rest--hall .closing-line, .rest--hall .closing-fam { color: var(--on-hall-2); }
+.rest--hall .cd-l, .rest--hall .cd-done-sub, .rest--hall .translit, .rest--hall .closing-line, .rest--hall .closing-lead, .rest--hall .closing-fam { color: var(--on-hall-2); }
 .rest--hall .cd-until, .rest--hall .dua .ar, .rest--hall .dua .src, .rest--hall .closing-jzk { color: var(--zari); }
 .rest--hall .cd-done, .rest--hall .dua-lead, .rest--hall .dua .en { color: var(--on-hall); }
 .rest--hall .dua::before { background: var(--zari); }
