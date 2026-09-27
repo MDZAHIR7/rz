@@ -1,0 +1,28 @@
+{
+  "name": "Invitation",
+  "short_name": "Invitation",
+  "description": "With the blessings of Allah, we would be honoured by your presence.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#D5CCC1",
+  "theme_color": "#D5CCC1",
+  "icons": [
+    {
+      "src": "../../app/img/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "../../app/img/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "../../app/img/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

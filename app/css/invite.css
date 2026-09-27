@@ -15,6 +15,9 @@
 @font-face { font-family: 'Amiri Quran'; font-style: normal; font-weight: 400; font-display: swap;
   src: url(../fonts/amiri-quran.woff2) format('woff2'); unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF; }
 /* metric-matched fallbacks (Times New Roman metrics) so the swap does not shift the layout */
+/* the Qur'an verse in the Indo-Pak script most readers in India learnt from (quran.com's IndoPak Nastaleeq) */
+@font-face { font-family: 'IndoPak Nastaleeq'; font-style: normal; font-weight: 400; font-display: swap;
+  src: url(../fonts/indopak-nastaleeq.woff2) format('woff2'); }
 @font-face { font-family: 'Garamond Fallback'; font-style: normal; src: local('Times New Roman'), local('TimesNewRomanPSMT'), local('Liberation Serif'), local('Noto Serif');
   size-adjust: 92.87%; ascent-override: 108.44%; descent-override: 32.09%; line-gap-override: 0%; }
 @font-face { font-family: 'Garamond Fallback'; font-style: italic; src: local('Times New Roman Italic'), local('TimesNewRomanPS-ItalicMT'), local('Liberation Serif Italic'), local('Noto Serif Italic');
@@ -201,7 +204,11 @@ html[data-variant$="walima"] .times { top: calc(614 * var(--u)); }   /* one even
 .venue-line .vn { font: calc(17 * var(--u)) / 1.1 var(--display); color: #33251B; }
 .venue-line span:last-child { font: calc(9.6 * var(--u)) / 1.3 var(--text); letter-spacing: .18em; text-transform: uppercase; color: #5A4636; }
 
-.cue { left: 50%; top: calc(738 * var(--u)); width: 1px; height: calc(22 * var(--u)); margin-left: -.5px; overflow: hidden; opacity: 0;
+/* a plain "there's more below" above the cue line: the first screen looks complete, so say it in words */
+.cue-text { left: 0; right: 0; width: fit-content; margin: 0 auto; top: calc(737 * var(--u)); font: calc(9.8 * var(--u)) / 1 var(--text); letter-spacing: .22em; text-transform: uppercase; color: #5E3C14; padding-left: .22em; opacity: 0; }
+html.no-js .cue-text, html.settled .cue-text { opacity: 1; transition: opacity .8s ease; }
+html.scrolled .cue-text { opacity: 0; }
+.cue { left: 50%; top: calc(752 * var(--u)); width: 1px; height: calc(13 * var(--u)); margin-left: -.5px; overflow: hidden; opacity: 0;
   background: linear-gradient(rgba(150, 97, 32, 0), rgba(150, 97, 32, .55)); }
 /* the date is a button: tapping it opens "Save the date" */
 .date { cursor: pointer; -webkit-tap-highlight-color: transparent; border-radius: 50%; }
@@ -231,7 +238,7 @@ html.scrolled .cue { opacity: 0; }
 .verse { padding-top: calc(48 * var(--v)); }
 .verse blockquote { margin: 0; }
 .ar { font-family: var(--arabic); font-feature-settings: 'calt', 'liga'; text-align: center; text-wrap: balance; }
-.verse .ar { font-size: calc(24 * var(--v)); line-height: 2.05; color: var(--ink); }
+.verse .ar { font-family: 'IndoPak Nastaleeq', var(--arabic); font-size: calc(24 * var(--v)); line-height: 2.05; color: var(--ink); }
 .verse .en { margin-top: calc(18 * var(--v)); font: italic calc(18 * var(--v)) / 1.55 var(--text); color: var(--ink-2); text-wrap: pretty; }
 .verse cite { display: block; margin-top: calc(14 * var(--v)); font: normal calc(15 * var(--v)) / 1.2 var(--text); color: var(--gold-ink); letter-spacing: .04em; }
 
