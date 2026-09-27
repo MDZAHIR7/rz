@@ -1,7 +1,7 @@
 {
   "name": "Invitation",
   "short_name": "Invitation",
-  "description": "A private invitation. It opens from the link you were sent.",
+  "description": "We would be so happy to have you celebrate with us.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

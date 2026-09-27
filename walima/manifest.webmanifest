@@ -1,7 +1,7 @@
 {
   "name": "Invitation",
   "short_name": "Invitation",
-  "description": "A private invitation. It opens from the link you were sent.",
+  "description": "With the blessings of Allah, we would be honoured by your presence.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
