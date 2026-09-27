@@ -150,6 +150,9 @@ html.js:not(.primed) .court-bg { visibility: hidden; }
   transform: translateX(-120%);
 }
 .glint i { width: 38%; transform: translateX(300%); }
+/* once the page has settled, a golden shimmer keeps travelling across the Bismillah, right to left like the script */
+html.settled .glint i { animation: bism-shimmer 5.5s ease-in-out 1s infinite; }
+@keyframes bism-shimmer { 0% { transform: translateX(300%); } 38%, 100% { transform: translateX(-130%); } }
 
 .meaning {
   left: calc(62 * var(--u)); width: calc(266 * var(--u)); top: calc(201 * var(--u));
@@ -199,7 +202,7 @@ html.js:not(.primed) .court-bg { visibility: hidden; }
 html[data-variant$="walima"] .times { top: calc(614 * var(--u)); }   /* one event: sit in the middle of the two-line slot */
 .hijri { left: 0; right: 0; width: fit-content; margin: 0 auto; top: calc(584 * var(--u)); text-align: center; font: calc(9.6 * var(--u)) / 1.2 var(--text); letter-spacing: .16em; text-transform: uppercase; color: #7A6552; font-variant-numeric: lining-nums; }
 .venue-line { left: calc(40 * var(--u)); width: calc(310 * var(--u)); top: calc(652 * var(--u)); display: flex; flex-direction: column; align-items: center; gap: calc(3 * var(--u)); text-align: center; }
-.venue-line .vl { display: flex; align-items: center; gap: calc(8 * var(--u)); margin-bottom: calc(3 * var(--u)); font: calc(8.6 * var(--u)) / 1 var(--text); letter-spacing: .32em; text-transform: uppercase; color: var(--gold-ink); padding-left: .32em; }
+.venue-line .vl { display: flex; align-items: center; gap: calc(8 * var(--u)); margin-bottom: calc(8 * var(--u)); font: calc(8.6 * var(--u)) / 1 var(--text); letter-spacing: .32em; text-transform: uppercase; color: var(--gold-ink); padding-left: .32em; }
 .venue-line .vl::before, .venue-line .vl::after { content: ""; width: calc(22 * var(--u)); height: 1px; background: rgba(150, 97, 32, .55); }
 .venue-line .vn { font: calc(17 * var(--u)) / 1.1 var(--display); color: #33251B; }
 .venue-line span:last-child { font: calc(9.6 * var(--u)) / 1.3 var(--text); letter-spacing: .18em; text-transform: uppercase; color: #5A4636; }
@@ -761,6 +764,7 @@ html.paused *, html.paused *::before, html.paused *::after { animation-play-stat
   .mute { transform: none; }
   .cal-more.show { animation: none; }
   .sheet-card, .sheet-back { transition: none; }
+  html.settled .glint i { animation: none; }
   .mglints i, .ladi, .jhoomar, .fl::after, .jg, .dust i { animation: none !important; }
   .mglints, .dust { display: none; }
 }
