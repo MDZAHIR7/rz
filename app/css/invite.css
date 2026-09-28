@@ -256,7 +256,12 @@ html.scrolled .cue { opacity: 0; }
 /* single-line headings shrink-wrap, so the music control can tell real gaps from text */
 .events-day, .venue-name, .venue-addr, .cd-until, .verse cite, .closing-sig, .closing-jzk, .rsvp-title, .cal-more-title { width: fit-content; margin-left: auto; margin-right: auto; }
 .orn { width: calc(60 * var(--v)); height: auto; margin: 0 auto calc(26 * var(--v)); }
-.verse { padding-top: calc(48 * var(--v)); }
+/* each block rises 18 units into place as it is read, and a section clips what lies outside it (content-visibility), so a
+   short last line (the verse reference, the dua's source, the countdown's "until") needs room below it to be seen at all */
+.verse { padding-top: calc(48 * var(--v)); padding-bottom: calc(22 * var(--v)); }
+/* the letter follows the verse closely: the reference, the sprig, then the greeting */
+.verse + .invitation { padding-top: calc(10 * var(--v)); }
+.verse + .invitation .sprig { margin-bottom: calc(18 * var(--v)); }
 .verse blockquote { margin: 0; }
 .ar { font-family: var(--arabic); font-feature-settings: 'calt', 'liga'; text-align: center; text-wrap: balance; }
 .verse .ar { font-family: 'IndoPak Nastaleeq', var(--arabic); font-size: calc(24 * var(--v)); line-height: 2.05; color: var(--ink); }
@@ -307,7 +312,7 @@ html[data-variant^="english"] .invitation { padding-top: calc(40 * var(--v)); }
 .ev-meal svg { width: calc(22 * var(--v)); height: calc(22 * var(--v)); flex: none; fill: none; stroke: currentColor; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; }
 
 .venue { padding-top: calc(64 * var(--v)); }
-.venue-label { display: flex; align-items: center; justify-content: center; gap: calc(12 * var(--v)); margin: 0 0 calc(4 * var(--v)); font: calc(12 * var(--v)) / 1 var(--text); letter-spacing: .34em; text-transform: uppercase; color: var(--gold-ink); padding-left: .34em; }
+.venue-label { display: flex; align-items: center; justify-content: center; gap: calc(12 * var(--v)); margin: 0 0 calc(18 * var(--v)); font: calc(12 * var(--v)) / 1 var(--text); letter-spacing: .34em; text-transform: uppercase; color: var(--gold-ink); padding-left: .34em; }
 .venue-label::before, .venue-label::after { content: ""; width: calc(30 * var(--v)); height: 1px; background: rgba(150, 97, 32, .55); }
 .venue-name { font: calc(50 * var(--v)) / 1.1 var(--script); color: var(--ink); }
 .venue-addr { margin-top: calc(10 * var(--v)); font: calc(17.5 * var(--v)) / 1.4 var(--text); color: var(--ink-2); text-wrap: balance; }
@@ -338,7 +343,8 @@ html[data-variant^="english"] .invitation { padding-top: calc(40 * var(--v)); }
 .cal-more.show { animation: rise .5s var(--ease-out) both; }
 @keyframes rise { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
 
-.countdown { padding-top: calc(62 * var(--v)); }
+.countdown { padding-top: calc(62 * var(--v)); padding-bottom: calc(22 * var(--v)); }
+.countdown + .dua, .countdown + .rsvp { padding-top: calc(44 * var(--v)); }
 html.no-js .countdown { display: none; }
 .cd-row { display: flex; justify-content: center; gap: calc(12 * var(--v)); }
 .cd-unit { display: flex; flex-direction: column; align-items: center; min-width: calc(64 * var(--v)); }
@@ -349,7 +355,8 @@ html.no-js .countdown { display: none; }
 .cd-done { font: italic calc(30 * var(--v)) / 1.2 var(--display); color: var(--ink); }
 .cd-done-sub { margin-top: calc(10 * var(--v)); font: italic calc(17 * var(--v)) / 1.45 var(--text); color: var(--ink-2); text-wrap: balance; }
 
-.dua { padding-top: calc(66 * var(--v)); }
+.dua { padding-top: calc(66 * var(--v)); padding-bottom: calc(22 * var(--v)); }
+.dua + .rsvp { padding-top: calc(44 * var(--v)); }
 .dua::before { content: ""; display: block; width: calc(44 * var(--v)); height: 1px; margin: 0 auto calc(30 * var(--v)); background: var(--gold); opacity: .6; }
 .dua-lead { font: italic calc(25 * var(--v)) / 1.25 var(--display); color: var(--ink); font-variation-settings: 'opsz' 28; text-wrap: balance; }
 .dua .ar { margin-top: calc(20 * var(--v)); font-size: calc(25 * var(--v)); line-height: 1.9; color: var(--gold-ink); }
