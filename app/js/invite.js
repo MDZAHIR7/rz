@@ -42,8 +42,6 @@
     stage.setAttribute('aria-label', 'Invitation for ' + to + '. Open the invitation');
     $('greetName').textContent = 'Dear ' + to + ',';
     $('greet').hidden = false;
-    const rn = $('rsvpName');
-    if (rn && !rn.value) rn.value = to;
   })();
 
   /* ------------------------------------------------------------------ rose petals and gold leaf: one canvas that exists
@@ -456,7 +454,7 @@
     let slotFree = true, down = false, lastY = scrollY, idleT = 0, io = null;
     const update = () => muteBtn.classList.toggle('show', slotFree && !down);
     const targets = document.querySelectorAll('.hbox .bism, .hbox .meaning, .hbox .opening, .hbox .names, .hbox .date, .hbox .hijri, ' +
-      '.rest > section > *:not(.cards):not(.rsvp-card), .cards > .scroll, .rsvp-card > *, .rsvp-form > *, .closing > *, .credits');
+      '.rest > section > *:not(.cards), .cards > .scroll, .closing > *, .credits');
     function observe() {
       if (io) io.disconnect();
       busy.clear();
@@ -534,7 +532,7 @@
      once, mehndi dividers draw themselves, cards catch a band of light, and the close ends in a shower of petals */
   if (IO && !REDUCED) {
     const groups = ['.sprig', '.verse blockquote > *', '.invitation > p', '.events-day', '.cards > .scroll', '.venue-label, .venue-name, .venue-addr, .actions',
-      '.cd-row, .cd-until', '.dua > *', '.rsvp-card', '.closing > *:not(.mono-end)'];
+      '.cd-row, .cd-until', '.dua > *', '.closing > *:not(.mono-end)'];
     const seen = new Set();
     groups.forEach((sel) => document.querySelectorAll(sel).forEach((el, i) => { if (!seen.has(el)) { seen.add(el); el.classList.add('rv'); el.style.setProperty('--rv', String(i)); } }));
     root.classList.add('rv-on');
@@ -658,74 +656,4 @@
   calBtn.addEventListener('click', () => openSheet(calBtn));
   dateEl.addEventListener('click', () => { if (settled) openSheet(dateEl); });
   dateEl.addEventListener('keydown', (e) => { if (settled && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openSheet(dateEl); } });
-
-  /* ------------------------------------------------------------------ RSVP (design only until an endpoint is set) */
-  const form = $('rsvp');
-  const nameIn = $('rsvpName'), nameErr = $('rsvpNameErr'), note = $('rsvpNote'), send = $('rsvpSend');
-  const out = $('guests'), row = $('guestsRow');
-  const minus = form.querySelector('[data-step="-1"]'), plus = form.querySelector('[data-step="1"]');
-  let guests = 1;
-  const MAXG = 10;
-  const attending = () => (form.querySelector('input[name="attend"]:checked') || {}).value !== 'no';
-  function syncGuests() {
-    const on = attending();
-    out.textContent = String(guests);
-    minus.disabled = !on || guests <= 1;
-    plus.disabled = !on || guests >= MAXG;
-    row.classList.toggle('off', !on);
-  }
-  form.querySelectorAll('.step').forEach((b) => b.addEventListener('click', () => {
-    guests = Math.max(1, Math.min(MAXG, guests + Number(b.dataset.step)));
-    syncGuests();
-  }));
-  form.querySelectorAll('input[name="attend"]').forEach((r) => r.addEventListener('change', syncGuests));
-  nameIn.addEventListener('input', () => { if (nameIn.value.trim()) { nameErr.textContent = ''; nameIn.removeAttribute('aria-invalid'); } });
-  syncGuests();
-  function rsvpMessage(p) {
-    const ev = CFG.eventsWords || 'wedding';
-    if (MUSLIM) {
-      return p.attending
-        ? `Assalamu alaikum wa rahmatullahi wa barakatuh, ${CFG.couple}! This is ${p.name}. In sha Allah, ${p.guests > 1 ? `we (${p.guests} guests) will` : 'I will'} be at your ${ev}. Barakallahu lakuma!`
-        : `Assalamu alaikum wa rahmatullahi wa barakatuh, ${CFG.couple}! This is ${p.name}. I'm sorry I can't make it to your ${ev}, but you are both in my duas. Barakallahu lakuma!`;
-    }
-    return p.attending
-      ? `Hi ${CFG.couple}! This is ${p.name}. Joyfully attending your ${ev}${p.guests > 1 ? `, ${p.guests} of us` : ''}. See you there!`
-      : `Hi ${CFG.couple}! This is ${p.name}. Sadly I can't make it to your ${ev}, but I'm sending you both my love and best wishes.`;
-  }
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const name = nameIn.value.replace(/\s+/g, ' ').trim();
-    if (!name) {
-      nameErr.textContent = 'Please add your name, so we know who is replying.';
-      nameIn.setAttribute('aria-invalid', 'true');
-      nameIn.focus();
-      return;
-    }
-    const payload = { name, attending: attending(), guests: attending() ? guests : 0, variant: CFG.variant, sentAt: new Date().toISOString() };
-    if (!CFG.rsvpEndpoint) {
-      if (CFG.rsvpWhatsApp) {
-        if (payload.attending) petals.rain(40);
-        window.open('https://wa.me/' + CFG.rsvpWhatsApp + '?text=' + encodeURIComponent(rsvpMessage(payload)), '_blank', 'noopener');
-        note.textContent = 'Your reply is ready in WhatsApp. Just press send.';
-        return;
-      }
-      note.textContent = 'Replies open here soon — your answer hasn’t been sent yet.';
-      return;
-    }
-    send.disabled = true;
-    send.textContent = 'Sending…';
-    note.textContent = '';
-    try {
-      const res = await fetch(CFG.rsvpEndpoint, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
-      if (!res.ok) throw new Error(String(res.status));
-      note.textContent = payload.attending ? 'Thank you. Your reply has been sent, and we look forward to seeing you.' : 'Thank you for letting us know. Your reply has been sent.';
-      if (payload.attending) petals.rain(40);
-      form.querySelectorAll('input, button').forEach((el) => { el.disabled = true; });
-      send.textContent = 'Reply sent';
-    } catch (err) {
-      note.textContent = 'Your reply could not be sent. Please check your connection and try again.';
-      send.disabled = false;
-      send.textContent = 'Send reply';
-    }
-  });
 })();
