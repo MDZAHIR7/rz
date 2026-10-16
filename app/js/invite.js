@@ -104,16 +104,17 @@
         const roll = Math.random(), gold = roll < 0.18, mogra = !gold && roll < 0.4, z = 0.55 + Math.random() * 0.75;   // z: nearer is larger, faster
         const p = {
           img: gold ? sprites.gold[i % 2] : mogra ? sprites.mogra : sprites.petal[Math.floor(Math.random() * 4)], gold, z,
-          size: (gold ? 11 : 17) * z, x: 0, y: 0, vx: 0, vy: 0, fall: (85 + Math.random() * 75) * z, life: from && from.pop ? 2.2 + Math.random() * 1.3 : 6 + Math.random() * 2.5,
+          size: (gold ? 11 : 17) * z, x: 0, y: 0, vx: 0, vy: 0, fall: (85 + Math.random() * 75) * z,
+          life: from && from.life ? from.life[0] + Math.random() * from.life[1] : from && from.pop ? 2.2 + Math.random() * 1.3 : 6 + Math.random() * 2.5,
           sway: 14 + Math.random() * 26, sf: 0.6 + Math.random() * 1.1, sp: Math.random() * 6.28,
           rot: Math.random() * 6.28, vr: (Math.random() - 0.5) * 2.4, flip: Math.random() * 6.28, vf: 1.5 + Math.random() * 3.2, t: 0, delay: 0,
         };
-        if (from) {      // thrown out of a point, then settling into the fall
+        if (from && from.x !== undefined) {      // thrown out of a point, then settling into the fall
           const a = Math.random() * Math.PI * 2, v = (from.pop ? 150 : 90) + Math.random() * 260;   // a tap's pop is brisker and brief
           p.x = from.x + (Math.random() - 0.5) * (from.w || 0); p.y = from.y + (Math.random() - 0.5) * (from.h || 0);
           p.vx = Math.cos(a) * v; p.vy = Math.sin(a) * v * 0.8 - 120; p.delay = Math.random() * (from.spread || 0);
         } else {         // drifting down from above
-          p.x = Math.random() * W; p.y = -30 - Math.random() * 60; p.vy = p.fall; p.delay = Math.random() * 2200;
+          p.x = Math.random() * W; p.y = -30 - Math.random() * 60; p.vy = p.fall; p.delay = Math.random() * (from && from.spread !== undefined ? from.spread : 2200);
         }
         parts.push(p);
       }
@@ -149,7 +150,7 @@
       if (document.hidden) { cancelAnimationFrame(raf); raf = 0; }
       else if (parts.length && !raf && cx) { last = performance.now(); raf = requestAnimationFrame(frame); }
     });
-    return { prep, rain: (n) => add(n), burst: (x, y, n, o) => add(n, Object.assign({ x, y }, o)) };
+    return { prep, rain: (n, o) => add(n, o), burst: (x, y, n, o) => add(n, Object.assign({ x, y }, o)) };
   })();
 
   /* ------------------------------------------------------------------ music: a plain <audio> element
@@ -383,8 +384,10 @@
       const s = seal.getBoundingClientRect(), b = stage.querySelector('.box').getBoundingClientRect();
       const k = Math.min(1.6, innerWidth / 390);
       setTimeout(() => {
-        petals.burst(s.left + s.width / 2, s.top + s.height / 2, Math.round(30 * k), { w: b.width * 0.4, h: b.height * 0.5, spread: 700 });
-        petals.rain(Math.round(44 * k));
+        // they come through with the light and are gone by the time the names are written (4.6 s), so nothing
+        // else draws while the names appear: the petal canvas repaints the whole screen every frame it is busy
+        petals.burst(s.left + s.width / 2, s.top + s.height / 2, Math.round(30 * k), { w: b.width * 0.4, h: b.height * 0.5, spread: 500, life: [2.6, 0.9] });
+        petals.rain(Math.round(44 * k), { spread: 900, life: [2.4, 0.9] });
       }, 700);
     }
     const marker = document.body.animate([{ opacity: 1 }, { opacity: 1 }], { duration: 1, delay: end + 60 });
@@ -410,11 +413,22 @@
   function settle() {
     if (settled) return;
     settled = true;
-    for (const r of running) { try { r.a.cancel(); } catch (e) {} }
-    running.length = 0;
     plan.length = 0;
-    document.querySelectorAll('[style*="will-change"]').forEach((el) => { el.style.willChange = ''; });
+    // the doorway's own animations end with it; the stele's finished ones hold their last frame (fill: both), so
+    // they are ended, and their layers released, a few at a time in idle moments: no long freeze as the date shows
+    const done = running.filter((r) => !stage.contains(r.el));
+    for (const r of running) if (stage.contains(r.el)) { try { r.a.cancel(); } catch (e) {} }
+    running.length = 0;
     stage.remove();                            // the doorway and its decoded layers are gone for good
+    const loose = [...document.querySelectorAll('[style*="will-change"]')];
+    const tidy = (deadline) => {
+      while ((done.length || loose.length) && (!deadline || deadline.timeRemaining() > 4)) {
+        if (done.length) { const r = done.pop(); try { r.a.cancel(); } catch (e) {} }
+        else loose.pop().style.willChange = '';
+      }
+      if (done.length || loose.length) idle(tidy, { timeout: 600 });
+    };
+    idle(tidy, { timeout: 600 });
     root.classList.add('settled');
     $('cue').classList.add('run');
     if (stageHadFocus) { const h = $('names'); h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); }
