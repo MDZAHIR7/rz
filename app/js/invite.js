@@ -422,11 +422,12 @@
     stage.remove();                            // the doorway and its decoded layers are gone for good
     const loose = [...document.querySelectorAll('[style*="will-change"]')];
     const tidy = (deadline) => {
-      while ((done.length || loose.length) && (!deadline || deadline.timeRemaining() > 4)) {
+      // a few every pass however busy the page is (the hall's gentle animations leave little idle time), more when idle
+      for (let n = 0; (done.length || loose.length) && (n < 6 || (deadline && deadline.timeRemaining() > 4)); n++) {
         if (done.length) { const r = done.pop(); try { r.a.cancel(); } catch (e) {} }
         else loose.pop().style.willChange = '';
       }
-      if (done.length || loose.length) idle(tidy, { timeout: 600 });
+      if (done.length || loose.length) idle(tidy, { timeout: 200 });
     };
     idle(tidy, { timeout: 600 });
     root.classList.add('settled');
