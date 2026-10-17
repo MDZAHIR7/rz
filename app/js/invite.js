@@ -1,5 +1,5 @@
-/* One tap opens the doors. The invitation is then revealed from top to bottom in reading order.
-   Phones use a lighter opening; every layout shares the same ordered text reveal. */
+/* The original inward-opening doors and floating monogram lead into the invitation.
+   Measured phone geometry keeps the handoff aligned; overlapping text groups keep the reading fluid. */
 (() => {
   'use strict';
   const root = document.documentElement;
@@ -186,7 +186,7 @@
 
   /* ------------------------------------------------------------------ animation plumbing */
   let opened = false, settled = false, primed = false;
-  let t0 = 0, idleTimer = 0;
+  let t0 = 0, idleTimer = 0, introPausedAt = null;
   const running = [];
   const plan = [];
   const E = {
@@ -194,6 +194,7 @@
     inOut: 'cubic-bezier(0.65, 0, 0.35, 1)',
     door: 'cubic-bezier(0.58, 0.02, 0.24, 1)',
     push: 'cubic-bezier(0.55, 0, 0.8, 0.35)',
+    flight: 'cubic-bezier(0.45, 0, 0.18, 1)',
   };
   function anim(el, frames, opts) {
     if (!el) return;
@@ -205,7 +206,9 @@
     // A late frame must seek to the right point, rather than restart an earlier animation.
     o.delay -= performance.now() - t0;
     if (!p.el.style.willChange) p.el.style.willChange = 'transform, opacity';
-    running.push({ el: p.el, a: p.el.animate(p.frames, o) });
+    const a = p.el.animate(p.frames, o);
+    running.push({ el: p.el, a });
+    if (document.hidden) a.pause();
   }
   // the first ~0.7 s is created inside the tap; the rest over the next frames, so the tap itself stays cheap
   function launch() {
@@ -232,6 +235,7 @@
     if (primed) return;
     primed = true;
     root.classList.add('primed');
+    for (const id of ['meaning', 'heroLines']) flowWords($(id));
   }
   const onLoad = (f) => (document.readyState === 'complete' ? setTimeout(f, 0) : window.addEventListener('load', f));
   onLoad(() => {
@@ -252,35 +256,47 @@
   if (!REDUCED) idleTimer = setTimeout(idleSheen, 1400);
 
   /* ------------------------------------------------------------------ the opening */
+  const LAND = 3150;
   function cinematic() {
     const u = unit();
+    const source = seal.getBoundingClientRect(), target = $('with').getBoundingClientRect();
+    const dx = target.left + target.width / 2 - source.left - source.width / 2;
+    const dy = target.top + target.height / 2 - source.top - source.height / 2;
+    const k = Math.max(0.25, Math.min(0.85, target.width / source.width));
     // 0. the hint yields; the inlaid seal catches the light and lifts off the doors (it is never split)
-    anim($('hint'), [{ opacity: 1 }, { opacity: 0 }], { duration: 300, easing: 'ease-out' });
-    anim($('for'), [{ opacity: 1 }, { opacity: 0 }], { duration: 300, easing: 'ease-out' });
+    anim($('hint'), [{ opacity: 1 }, { opacity: 0 }], { duration: 250, easing: E.out });
+    anim($('for'), [{ opacity: 1 }, { opacity: 0 }], { duration: 250, easing: E.out });
     sweep(seal.querySelector('.sheen i'), 0, 760);
-    anim(seal, [{ transform: 'none' }, { transform: `translateY(${(-12 * u).toFixed(1)}px) scale(1.06)` }], { duration: 1500, easing: E.out });
-    anim(seal, [{ opacity: 1 }, { opacity: 0 }], { delay: 600, duration: 700, easing: 'ease-out' });
+    anim(seal, [
+      { transform: 'none', offset: 0 },
+      { transform: 'none', offset: 150 / LAND, easing: E.out },
+      { transform: `translateY(${-6 * u}px) scale(1.12)`, offset: 650 / LAND, easing: E.inOut },
+      { transform: `translateY(${-9 * u}px) scale(1.15)`, offset: 1300 / LAND, easing: E.flight },
+      { transform: `translate(${dx}px, ${dy}px) scale(${k})`, offset: 1 },
+    ], { duration: LAND });
+    // The seal remains intact until it reaches the joining word, then they crossfade in place.
+    anim(seal, [{ opacity: 1 }, { opacity: 1, offset: 0.87 }, { opacity: 0 }], { duration: LAND + 170 });
     anim(sealShadow, [
       { opacity: 0, transform: 'none', offset: 0 },
       { opacity: 0, transform: 'none', offset: 150 / 2800 },
       { opacity: 0.9, transform: `translate(${(3 * u).toFixed(1)}px, ${(10 * u).toFixed(1)}px) scale(1.07)`, offset: 900 / 2800, easing: 'ease-in-out' },
       { opacity: 0.7, transform: `translate(${(4 * u).toFixed(1)}px, ${(14 * u).toFixed(1)}px) scale(1.12)`, offset: 2000 / 2800 },
       { opacity: 0, transform: `translate(${(5 * u).toFixed(1)}px, ${(18 * u).toFixed(1)}px) scale(1.16)`, offset: 1 },
-    ], { duration: 2800 });
+    ], { duration: 2100 });
 
     // 1. the jali doors swing inward; the sun blooms in the far arch; the mirror inlays catch it once
-    anim($('leafL'), [{ transform: 'rotateY(0deg)' }, { transform: 'rotateY(84deg)' }], { delay: 450, duration: 2000, easing: E.door });
-    anim($('leafR'), [{ transform: 'rotateY(0deg)' }, { transform: 'rotateY(-84deg)' }], { delay: 450, duration: 2000, easing: E.door });
-    anim($('glowCore'), [{ opacity: 0.82 }, { opacity: 0 }], { delay: 380, duration: 1400, easing: 'cubic-bezier(0.4, 0, 0.6, 1)' });
-    anim($('bloom'), [{ opacity: 0, transform: 'scale(.5)' }, { opacity: 1, transform: 'scale(1)' }], { delay: 700, duration: 1900, easing: E.out });
-    anim($('spill'), [{ opacity: 0 }, { opacity: 1 }], { delay: 900, duration: 1500, easing: 'ease-out' });
+    anim($('leafL'), [{ transform: 'rotateY(0deg)' }, { transform: 'rotateY(84deg)' }], { delay: 250, duration: 1500, easing: E.door });
+    anim($('leafR'), [{ transform: 'rotateY(0deg)' }, { transform: 'rotateY(-84deg)' }], { delay: 250, duration: 1500, easing: E.door });
+    anim($('glowCore'), [{ opacity: 0.82 }, { opacity: 0 }], { delay: 250, duration: 1150, easing: E.inOut });
+    anim($('bloom'), [{ opacity: 0, transform: 'scale(.5)' }, { opacity: 1, transform: 'scale(1)' }], { delay: 500, duration: 1450, easing: E.out });
+    anim($('spill'), [{ opacity: 0 }, { opacity: 1 }], { delay: 650, duration: 1200, easing: E.out });
     const gl = Array.from(document.querySelectorAll('#glints i')).map((g) => {
       const x = parseFloat(g.style.getPropertyValue('--x')), y = parseFloat(g.style.getPropertyValue('--y'));
       return { g, d: Math.hypot(x - 195, (y - 330) * 1.4) };
     });
     const dmin = Math.min(...gl.map((o) => o.d)), dmax = Math.max(...gl.map((o) => o.d));
     gl.forEach(({ g, d }, i) => {
-      const delay = 1150 + ((d - dmin) / (dmax - dmin || 1)) * 720 + ((i * 97) % 7) * 18;
+      const delay = 850 + ((d - dmin) / (dmax - dmin || 1)) * 540 + ((i * 97) % 7) * 14;
       anim(g, [
         { opacity: 0, transform: 'scale(.3) rotate(0deg)' },
         { opacity: 1, transform: 'scale(1.15) rotate(18deg)', offset: 0.32 },
@@ -293,30 +309,18 @@
       { transform: 'scale(1)', opacity: 1, offset: 0 },
       { transform: 'scale(1.75)', opacity: 1, offset: 0.55 },
       { transform: 'scale(2.5)', opacity: 0, offset: 1 },
-    ], { delay: 2000, duration: 1400, easing: E.push });
-    anim($('wall'), [{ opacity: 1 }, { opacity: 0 }], { delay: 2450, duration: 800, easing: 'ease-in' });
-    anim(courtImg, [{ opacity: 0 }, { opacity: 1 }], { delay: 2350, duration: 900, easing: 'ease-out' });
-    anim(courtImg, [{ transform: 'scale(.9)' }, { transform: 'none' }], { delay: 2350, duration: 1700, easing: E.out });
-    anim(hero, [{ opacity: 0 }, { opacity: 1 }], { delay: 2500, duration: 900, easing: 'ease-out' });
-    anim(hero, [{ transform: 'scale(.88)' }, { transform: 'none' }], { delay: 2500, duration: 1400, easing: E.out });
+    ], { delay: 1400, duration: 1000, easing: E.push });
+    anim($('wall'), [{ opacity: 1 }, { opacity: 0 }], { delay: 1750, duration: 650, easing: E.out });
+    anim(courtImg, [{ opacity: 0 }, { opacity: 1 }], { delay: 1650, duration: 750, easing: E.out });
+    anim(courtImg, [{ transform: 'scale(.9)' }, { transform: 'none' }], { delay: 1650, duration: 1100, easing: E.out });
+    anim(hero, [{ opacity: 0 }, { opacity: 1 }], { delay: 1750, duration: 650, easing: E.out });
+    anim(hero, [{ transform: 'scale(.88)' }, { transform: 'none' }], { delay: 1750, duration: 1000, easing: E.out });
     anim($('lattice'), [
       { transform: 'translate(30%, -26%)', opacity: 0, offset: 0 },
       { opacity: 1, offset: 0.35 },
       { transform: 'translate(0, 0)', opacity: 0.62, offset: 1 },
-    ], { delay: 2600, duration: 2800, easing: E.out });
+    ], { delay: 1850, duration: 1600, easing: E.out });
 
-  }
-
-  function mobileOpening() {
-    fadeIn(hero, 700, 500);
-    fadeIn(courtImg, 650, 500);
-    anim($('hint'), [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
-    anim($('for'), [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
-    anim(seal, [{ opacity: 1 }, { opacity: 0 }], { duration: 350 });
-    // Flat movement avoids nested 3D layers and camera scaling on phone GPUs.
-    anim($('leafL'), [{ transform: 'none', opacity: 1 }, { transform: 'translateX(-65%)', opacity: 0 }], { delay: 100, duration: 850, easing: E.out });
-    anim($('leafR'), [{ transform: 'none', opacity: 1 }, { transform: 'translateX(65%)', opacity: 0 }], { delay: 100, duration: 850, easing: E.out });
-    anim(stage, [{ opacity: 1 }, { opacity: 0 }], { delay: 650, duration: 600, easing: 'ease-out' });
   }
 
   function gentle() {
@@ -343,57 +347,81 @@
     nameResize = requestAnimationFrame(fitNames);
   });
 
-  async function revealOpening(delay) {
-    const wait = document.body.animate([{ opacity: 1 }, { opacity: 1 }], { duration: 1, delay: Math.max(0, delay - (performance.now() - t0)) });
-    running.push({ el: document.body, a: wait });
-    try { await wait.finished; } catch (e) { return; }
-    const topImage = $('bism').querySelector('img');
-    if (topImage.decode) { try { await topImage.decode(); } catch (e) {} }
-    // Each step waits for the previous fade to finish, including when a phone drops frames.
-    const sequence = [['bism', 500], ['meaning', 250], ['heroLines', 350], ['bride', 450], ['brideP', 200],
-      ['joint', 250], ['groom', 450], ['groomP', 200], ['dateText', 300], ['hijri', 150],
-      ['times', 250], ['venueLine', 300], ['dateHint', 180], ['cueText', 180]];
-    for (const [id, duration] of sequence) {
-      if (settled) return;
-      const el = $(id);
-      if (!el || (el.matches('.parent') && !el.textContent.trim())) continue;
-      if (id === 'bride') {
-        await Promise.race([fontReady, new Promise(resolve => setTimeout(resolve, 3000))]);
-        if (settled) return;
-        // Pin a stable fallback if the script font is unavailable; a late font must not move the names.
-        if (document.fonts && !document.fonts.check('40px "Great Vibes"')) $('names').style.setProperty('--script', 'var(--display)');
-        fitNames();
+  function flowWords(el) {
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    while (walker.nextNode()) if (walker.currentNode.textContent.trim()) nodes.push(walker.currentNode);
+    for (const node of nodes) {
+      const fragment = document.createDocumentFragment();
+      for (const part of node.textContent.match(/\s+|\S+/g)) {
+        if (/^\s+$/.test(part)) fragment.append(document.createTextNode(part));
+        else { const word = document.createElement('span'); word.className = 'flow-word'; word.textContent = part; fragment.append(word); }
       }
-      const a = el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: REDUCED ? 120 : duration, easing: 'ease-out', fill: 'both' });
-      running.push({ el, a });
-      if (document.hidden) a.pause();
-      try { await a.finished; } catch (e) { return; }
+      node.replaceWith(fragment);
     }
-    if (!settled) settle();
   }
 
-  function open(e) {
+  function revealOpening() {
+    const group = (id, delay, duration = 500, words = false) => {
+      const el = $(id);
+      if (!el || (el.matches('.parent') && !el.textContent.trim())) return;
+      const y = REDUCED || id === 'joint' ? 0 : 5;
+      anim(el, [{ opacity: 0, transform: `translateY(${y}px)` }, { opacity: 1, transform: 'none' }], { delay, duration, easing: E.out });
+      if (words) [...el.querySelectorAll('.flow-word')].forEach((word, i) => {
+        anim(word, [{ opacity: 0, transform: `translateY(${REDUCED ? 0 : 3}px)` }, { opacity: 1, transform: 'none' }],
+          { delay: delay + i * (REDUCED ? 0 : 14), duration: REDUCED ? 180 : 360, easing: E.out });
+      });
+    };
+    const at = time => REDUCED ? 350 + (time - 1950) * 0.18 : time;
+    const dur = time => REDUCED ? 180 : time;
+    group('bism', at(1950), dur(550));
+    group('meaning', at(2070), dur(450), true);
+    group('heroLines', at(2350), dur(450), true);
+    group('bride', at(2560), dur(500));
+    group('brideP', at(2700), dur(420));
+    group('joint', at(3020), dur(400));
+    group('groom', at(3220), dur(500));
+    group('groomP', at(3370), dur(450));
+    // All event details arrive as one readable block, rather than a series of extra waits.
+    for (const id of ['dateText', 'hijri', 'times', 'venueLine', 'dateHint']) group(id, at(3540), dur(500));
+    group('cueText', at(3800), dur(300));
+    const done = document.body.animate([{ opacity: 1 }, { opacity: 1 }], { delay: REDUCED ? 900 : 4200, duration: 1 });
+    running.push({ el: document.body, a: done });
+    if (document.hidden) done.pause();
+    done.finished.then(settle).catch(() => {});
+  }
+
+  async function open(e) {
     if (opened) return;
     opened = true;
     clearTimeout(idleTimer);
     startAudio();                              // synchronously inside the gesture
     prime();
+    stageHadFocus = document.activeElement === stage;
+    // Warm assets before measuring the handoff, so a late font cannot move its destination.
+    await Promise.all([
+      Promise.race([fontReady, new Promise(resolve => setTimeout(resolve, 1200))]),
+      ...[$('bism').querySelector('img'), $('stele')].map(img => img.decode ? img.decode().catch(() => {}) : Promise.resolve()),
+    ]);
+    if (document.fonts && !document.fonts.check('40px "Great Vibes"')) $('names').style.setProperty('--script', 'var(--display)');
+    fitNames();
     root.classList.add('opened');
     stage.setAttribute('aria-hidden', 'true');
-    stageHadFocus = document.activeElement === stage;
     t0 = performance.now();
+    if (document.hidden) introPausedAt = t0;
     try { if (navigator.vibrate) navigator.vibrate([12, 60, 18]); } catch (err) {}
-    REDUCED ? gentle() : MOBILE ? mobileOpening() : cinematic();
+    REDUCED ? gentle() : cinematic();
+    revealOpening();
     launch();
-    revealOpening(REDUCED ? 350 : MOBILE ? 1250 : 3400);
-    if (!REDUCED && !MOBILE) {                  // phones keep the opening clear while the words appear
+    if (!REDUCED) {
       const s = seal.getBoundingClientRect(), b = stage.querySelector('.box').getBoundingClientRect();
       const k = Math.min(1.6, innerWidth / 390);
       setTimeout(() => {
         // they come through with the light and are gone by the time the names are written (4.6 s), so nothing
         // else draws while the names appear: the petal canvas repaints the whole screen every frame it is busy
-        petals.burst(s.left + s.width / 2, s.top + s.height / 2, Math.round(30 * k), { w: b.width * 0.4, h: b.height * 0.5, spread: 500, life: [2.6, 0.9] });
-        petals.rain(Math.round(44 * k), { spread: 900, life: [2.4, 0.9] });
+        const density = MOBILE ? 0.45 : 1;
+        petals.burst(s.left + s.width / 2, s.top + s.height / 2, Math.round(30 * k * density), { w: b.width * 0.4, h: b.height * 0.5, spread: 500, life: [1.8, 0.7] });
+        petals.rain(Math.round(44 * k * density), { spread: 650, life: [1.8, 0.7] });
       }, 700);
     }
   }
@@ -575,11 +603,13 @@
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       root.classList.add('paused');
+      if (opened && !settled) introPausedAt = performance.now();
       running.forEach((r) => { try { if (r.a.playState === 'running') r.a.pause(); } catch (e) {} });
       wasPlaying = !audio.paused;
       if (wasPlaying) audio.pause();
     } else {
       root.classList.remove('paused');
+      if (introPausedAt !== null) { t0 += performance.now() - introPausedAt; introPausedAt = null; }
       running.forEach((r) => { try { if (r.a.playState === 'paused') r.a.play(); } catch (e) {} });
       if (wasPlaying && !muted) play();
       tick();

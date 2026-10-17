@@ -173,7 +173,9 @@ html.settled .glint i.g2 { animation-delay: .78s; }
 .opening .con { display: flex; align-items: center; justify-content: center; text-wrap: balance; padding: 0 calc(8 * var(--u)); }
 
 .lines { left: calc(45 * var(--u)); width: calc(300 * var(--u)); top: calc(231 * var(--u)); text-align: center; font: calc(10.4 * var(--u)) / 1.72 var(--text); letter-spacing: .12em; text-transform: uppercase; color: #5A4636; }
-.lines span { display: block; }
+.lines > span, .lines .host > span { display: block; }
+.flow-word { display: inline-block; }
+html.js:not(.settled) .flow-word { opacity: 0; }
 /* on a parents' card their names head the invitation, as on a printed card */
 .lines .host { margin-bottom: calc(4 * var(--u)); font: calc(17 * var(--u)) / 1.18 var(--display); letter-spacing: 0; text-transform: none; color: #33251B; }
 .names {
