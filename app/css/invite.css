@@ -83,6 +83,8 @@ button, input { font: inherit; color: inherit; }
 :focus-visible { outline: 1.5px solid var(--gold); outline-offset: 3px; }
 
 html.js:not(.settled), html.js:not(.settled) body { overflow: hidden; height: 100%; }
+/* Content starts hidden before any animation is scheduled, including on a busy phone. */
+html.js:not(.settled) :is(#bism, #meaning, #heroLines, #bride, #brideP, #joint, #groom, #groomP, #dateText, #hijri, #times, #venueLine, #dateHint, #cueText) { opacity: 0; }
 html.js:not(.primed) .invite { display: none; }             /* laid out in idle time, under the doors */
 html.js:not(.primed) .court-bg { visibility: hidden; }
 
@@ -104,7 +106,7 @@ html.js:not(.primed) .court-bg { visibility: hidden; }
 }
 
 /* ================================================================ hero: the carved stele */
-.hero { position: relative; height: 100vh; height: 100svh; min-height: calc(844 * var(--u)); overflow: hidden;
+.hero { position: relative; height: 100vh; height: 100svh; min-height: calc(844 * var(--v) + var(--sat) + var(--sab)); overflow: hidden;
   background: radial-gradient(ellipse 80% 62% at 50% 50%, rgba(120, 84, 46, 0) 50%, rgba(120, 84, 46, .24) 100%),   /* the wall darkens toward the edges */
     var(--inlay) url(../img/jaal.webp) 0 0 / calc(120 * var(--u)) repeat; }
 .hero::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: linear-gradient(#E6C884, #9C7031); box-shadow: 0 1px 8px rgba(96, 66, 34, .3); }
@@ -113,6 +115,8 @@ html.js:not(.primed) .court-bg { visibility: hidden; }
   position: absolute; left: 50%; top: var(--top);
   width: calc(390 * var(--u)); height: calc(844 * var(--u)); margin-left: calc(-195 * var(--u));
 }
+/* Fit the doors to the screen, but let the opened card use the phone's full width and scroll. */
+.hbox { --u: var(--v); --top: calc(var(--sat) + max(0px, (var(--H) - 844 * var(--u)) / 2)); }
 .hbox > * { position: absolute; }
 #hero { transform-origin: 50% calc(420 * var(--u)); }
 .stele { left: calc(6 * var(--u)); top: calc(8 * var(--u)); width: calc(378 * var(--u)); height: calc(800 * var(--u));
@@ -126,13 +130,8 @@ html.js:not(.primed) .court-bg { visibility: hidden; }
 
 /* light-wipe: a soft-edged window slides across while its content counter-slides (compositor only) */
 .wipe { overflow: hidden; }
-.wipe .win, .wipe .con { position: absolute; top: 0; bottom: 0; display: block; }
-.wipe .win { width: 130%; }
-.wipe .con { width: 76.923%; }
-.wipe.rtl .win { left: -30%; -webkit-mask-image: linear-gradient(to right, transparent 0, #000 23.08%); mask-image: linear-gradient(to right, transparent 0, #000 23.08%); }
-.wipe.rtl .con { left: 23.077%; }
-.wipe.ltr .win { left: 0; -webkit-mask-image: linear-gradient(to left, transparent 0, #000 23.08%); mask-image: linear-gradient(to left, transparent 0, #000 23.08%); }
-.wipe.ltr .con { left: 0; }
+.bism .win, .bism .con { position: absolute; inset: 0; }
+.name .win, .name .con { display: block; width: 100%; height: 100%; }
 
 /* the Bismillah in its arch-shaped (dome) composition, filling the pointed top of the stele's inner arch */
 .bism { left: calc(103 * var(--u)); top: calc(64 * var(--u)); width: calc(184 * var(--u)); height: calc(110.4 * var(--u)); }
@@ -226,7 +225,7 @@ html[data-variant$="walima"] .times { top: calc(614 * var(--u)); }   /* one even
 .cue-text::after { content: ""; width: calc(9 * var(--u)); height: calc(9 * var(--u)); border: solid #966120; border-width: 0 2px 2px 0; transform: rotate(45deg); animation: cue-bob 1.6s ease-in-out infinite; }
 @keyframes cue-bob { 0%, 100% { translate: 0 0; } 50% { translate: 0 calc(5 * var(--u)); } }
 /* shown soon after the doors open, not after the whole intro */
-html.no-js .cue-text, html.opened .cue-text, html.settled .cue-text { opacity: 1; transition: opacity .8s ease 1.2s; }
+html.no-js .cue-text, html.settled .cue-text { opacity: 1; }
 html.scrolled .cue-text { opacity: 0; transition-delay: 0s; }
 @media (prefers-reduced-motion: reduce) { .cue-text::after { animation: none; } }
 .cue { display: none; left: 50%; top: calc(752 * var(--u)); width: 1px; height: calc(13 * var(--u)); margin-left: -.5px; overflow: hidden; opacity: 0;
@@ -250,8 +249,7 @@ html.scrolled .cue { opacity: 0; }
   text-align: center;
 }
 .rest > section, .rest > footer { margin-left: auto; margin-right: auto; max-width: calc(340 * var(--v)); }
-/* off-screen sections are laid out only as they approach the viewport (keeps first paint light) */
-.rest > section, .rest > footer { content-visibility: auto; contain-intrinsic-size: auto 480px; }
+/* Keep section heights stable while scrolling; phone browsers must not replace estimated heights mid-tap. */
 
 /* single-line headings shrink-wrap, so the music control can tell real gaps from text */
 .events-day, .venue-name, .venue-addr, .cd-until, .verse cite, .closing-sig, .closing-jzk, .cal-more-title { width: fit-content; margin-left: auto; margin-right: auto; }

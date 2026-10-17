@@ -1,6 +1,5 @@
-/* The invitation: one tap opens the jali doors, the monogram floats through into the sunlit courtyard and
-   settles on the carved stele while the invitation is written in light. Everything that moves is
-   transform / opacity on baked layers (WAAPI); layers are promoted only around the intro and released after. */
+/* One tap opens the doors. The invitation is then revealed from top to bottom in reading order.
+   Phones use a lighter opening; every layout shares the same ordered text reveal. */
 (() => {
   'use strict';
   const root = document.documentElement;
@@ -8,21 +7,23 @@
   window.INVITE_BOOTED = true;
   root.classList.add('booted');                       // the tap hint shows only once a tap will be answered
   // the stele's faces are asked for now, not when its words first show: on a weak line that is seconds later
-  if (document.fonts && document.fonts.load) {
-    for (const f of ['40px "Great Vibes"', '16px "EB Garamond"', 'italic 16px "DM Serif Display"']) document.fonts.load(f).catch(() => {});
-  }
+  const fontReady = document.fonts && document.fonts.load
+    ? Promise.allSettled(['40px "Great Vibes"', '16px "EB Garamond"', 'italic 16px "EB Garamond"', '17px "DM Serif Display"'].map(f => document.fonts.load(f)))
+    : Promise.resolve();
 
   const CFG = window.INVITE_CONFIG || {};
   const $ = (id) => document.getElementById(id);
   const params = new URLSearchParams(location.search);
   const DEMO = params.get('demo') === '1';
   const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const MOBILE = matchMedia('(max-width: 767px), (pointer: coarse)').matches;
+  if (MOBILE) root.classList.add('mobile-intro');
   const MUSLIM = !!CFG.muslim;
 
   const stage = $('stage'), hero = $('hero'), seal = $('seal'), sealShadow = $('sealShadow');
   const audio = $('nasheed'), muteBtn = $('mute');
   const courtImg = document.querySelector('.court-bg img');
-  const joint = $('joint');                            // where the seal lands and becomes the word "with"
+  const joint = $('joint');
 
   if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
   scrollTo(0, 0);
@@ -184,8 +185,8 @@
   });
 
   /* ------------------------------------------------------------------ animation plumbing */
-  let opened = false, settled = false, skipping = false, primed = false;
-  let t0 = 0, geo = null, idleTimer = 0, openedAt = 0;
+  let opened = false, settled = false, primed = false;
+  let t0 = 0, idleTimer = 0;
   const running = [];
   const plan = [];
   const E = {
@@ -193,17 +194,16 @@
     inOut: 'cubic-bezier(0.65, 0, 0.35, 1)',
     door: 'cubic-bezier(0.58, 0.02, 0.24, 1)',
     push: 'cubic-bezier(0.55, 0, 0.8, 0.35)',
-    wipe: 'cubic-bezier(0.42, 0.04, 0.3, 1)',
-    flight: 'cubic-bezier(0.45, 0, 0.18, 1)',
   };
   function anim(el, frames, opts) {
     if (!el) return;
     plan.push({ el, frames, opts: Object.assign({ fill: 'both', easing: 'linear', delay: 0 }, opts) });
   }
   function create(p) {
-    if (settled || skipping) return;
+    if (settled) return;
     const o = Object.assign({}, p.opts);
-    o.delay = Math.max(0, o.delay - (performance.now() - t0));
+    // A late frame must seek to the right point, rather than restart an earlier animation.
+    o.delay -= performance.now() - t0;
     if (!p.el.style.willChange) p.el.style.willChange = 'transform, opacity';
     running.push({ el: p.el, a: p.el.animate(p.frames, o) });
   }
@@ -215,37 +215,23 @@
     now.forEach(create);
     const batch = () => {
       later.splice(0, 6).forEach(create);
-      if (later.length && !settled && !skipping) requestAnimationFrame(batch);
+      if (later.length && !settled) requestAnimationFrame(batch);
     };
     requestAnimationFrame(batch);
-    return Math.max(...now.concat(later).map((p) => p.opts.delay + p.opts.duration));
   }
   const unit = () => stage.querySelector('.box').getBoundingClientRect().width / 390;
-  function measure() {
-    const s = seal.getBoundingClientRect(), m = joint.getBoundingClientRect();
-    geo = { dx: m.left + m.width / 2 - (s.left + s.width / 2), dy: m.top + m.height / 2 - (s.top + s.height / 2), k: 0.55 };
-  }
-  function wipe(el, delay, dur, dir) {
-    if (!el) return;
-    const win = el.querySelector('.win'), con = el.querySelector('.con');
-    const s = dir === 'rtl' ? 1 : -1;
-    anim(win, [{ transform: `translateX(${100 * s}%)` }, { transform: 'translateX(0)' }], { delay, duration: dur, easing: E.wipe });
-    anim(con, [{ transform: `translateX(${-130 * s}%)` }, { transform: 'translateX(0)' }], { delay, duration: dur, easing: E.wipe });
-  }
-  const fadeUp = (el, delay, dur = 900, y = 6) => anim(el, [{ opacity: 0, transform: `translateY(${y}px)` }, { opacity: 1, transform: 'none' }], { delay, duration: dur, easing: E.out });
   const fadeIn = (el, delay, dur = 800) => anim(el, [{ opacity: 0 }, { opacity: 1 }], { delay, duration: dur, easing: 'ease-out' });
   const sweep = (band, delay, dur, from = '-120%', to = '300%') => anim(band, [{ transform: `translateX(${from})` }, { transform: `translateX(${to})` }], { delay, duration: dur, easing: E.inOut, fill: 'none' });
 
   /* ------------------------------------------------------------------ before the tap */
   // Lay out the courtyard under the opaque doorway and promote what will move, in idle time,
-  // so none of that work lands on the tap. The FLIP flight is measured here too.
-  const MOVERS = '#leafL, #leafR, #portal, #seal, #sealShadow, #wall, #glowCore, #bloom, #spill, #hint, #for, #hero, #lattice, .court-bg img, .wipe .win, .wipe .con, .glint i, .sheen i, #meaning, #openingOrn, #heroLines, #brideP, #with, #jl, #jr, #groomP, #times, #venueLine, #dateHint, #arc, #dateText, #hijri';
+  // so none of that work lands on the tap. Text gets a layer only while its own fade runs.
+  const MOVERS = '#leafL, #leafR, #portal, #seal, #sealShadow, #wall, #glowCore, #bloom, #spill, #hint, #for, #hero, #lattice, .court-bg img';
   const idle = window.requestIdleCallback || ((f) => setTimeout(f, 250));
   function prime() {
     if (primed) return;
     primed = true;
     root.classList.add('primed');
-    measure();
   }
   const onLoad = (f) => (document.readyState === 'complete' ? setTimeout(f, 0) : window.addEventListener('load', f));
   onLoad(() => {
@@ -253,14 +239,11 @@
       if (opened) return;
       prime();
       idle(() => {
-        if (!opened && !REDUCED) document.querySelectorAll(MOVERS).forEach((el) => { el.style.willChange = 'transform, opacity'; });
+        if (!opened && !REDUCED && !MOBILE) document.querySelectorAll(MOVERS).forEach((el) => { el.style.willChange = 'transform, opacity'; });
         idle(() => { if (!opened) petals.prep(); }, { timeout: 1500 });
       }, { timeout: 1200 });
     }, { timeout: 900 });
   });
-  let rz = 0;
-  addEventListener('resize', () => { cancelAnimationFrame(rz); rz = requestAnimationFrame(() => { if (primed && !opened) measure(); }); });
-
   function idleSheen() {
     if (opened) return;
     seal.querySelector('.sheen i').animate([{ transform: 'translateX(-120%)' }, { transform: 'translateX(300%)' }], { duration: 1500, easing: E.inOut });
@@ -269,25 +252,14 @@
   if (!REDUCED) idleTimer = setTimeout(idleSheen, 1400);
 
   /* ------------------------------------------------------------------ the opening */
-  const T_LAND = 4000;         // the monogram settles on the stele
   function cinematic() {
     const u = unit();
-    const { dx, dy, k } = geo;
     // 0. the hint yields; the inlaid seal catches the light and lifts off the doors (it is never split)
     anim($('hint'), [{ opacity: 1 }, { opacity: 0 }], { duration: 300, easing: 'ease-out' });
     anim($('for'), [{ opacity: 1 }, { opacity: 0 }], { duration: 300, easing: 'ease-out' });
     sweep(seal.querySelector('.sheen i'), 0, 760);
-    const lift = `translate(0px, ${(-6 * u).toFixed(1)}px) scale(1.12)`;
-    const hover = `translate(0px, ${(-9 * u).toFixed(1)}px) scale(1.15)`;
-    anim(seal, [
-      { transform: 'none', offset: 0 },
-      { transform: 'none', offset: 150 / T_LAND, easing: E.out },
-      { transform: lift, offset: 900 / T_LAND, easing: 'ease-in-out' },
-      { transform: hover, offset: 2000 / T_LAND, easing: E.flight },
-      { transform: `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px) scale(${k.toFixed(4)})`, offset: 1 },
-    ], { duration: T_LAND });
-    // it does not land as a logo: over the last stretch of its flight it dissolves into the word that joins the names
-    anim(seal, [{ opacity: 1 }, { opacity: 1, offset: 0.8 }, { opacity: 0 }], { duration: T_LAND + 40 });
+    anim(seal, [{ transform: 'none' }, { transform: `translateY(${(-12 * u).toFixed(1)}px) scale(1.06)` }], { duration: 1500, easing: E.out });
+    anim(seal, [{ opacity: 1 }, { opacity: 0 }], { delay: 600, duration: 700, easing: 'ease-out' });
     anim(sealShadow, [
       { opacity: 0, transform: 'none', offset: 0 },
       { opacity: 0, transform: 'none', offset: 150 / 2800 },
@@ -295,9 +267,6 @@
       { opacity: 0.7, transform: `translate(${(4 * u).toFixed(1)}px, ${(14 * u).toFixed(1)}px) scale(1.12)`, offset: 2000 / 2800 },
       { opacity: 0, transform: `translate(${(5 * u).toFixed(1)}px, ${(18 * u).toFixed(1)}px) scale(1.16)`, offset: 1 },
     ], { duration: 2800 });
-    anim($('with'), [{ opacity: 0, transform: 'scale(.82)' }, { opacity: 1, transform: 'none' }], { delay: T_LAND - 450, duration: 1200, easing: E.out });
-    anim($('jl'), [{ opacity: 0, transform: 'scaleX(0)' }, { opacity: 1, transform: 'none' }], { delay: T_LAND - 150, duration: 1100, easing: E.out });
-    anim($('jr'), [{ opacity: 0, transform: 'scaleX(0)' }, { opacity: 1, transform: 'none' }], { delay: T_LAND - 150, duration: 1100, easing: E.out });
 
     // 1. the jali doors swing inward; the sun blooms in the far arch; the mirror inlays catch it once
     anim($('leafL'), [{ transform: 'rotateY(0deg)' }, { transform: 'rotateY(84deg)' }], { delay: 450, duration: 2000, easing: E.door });
@@ -336,40 +305,76 @@
       { transform: 'translate(0, 0)', opacity: 0.62, offset: 1 },
     ], { delay: 2600, duration: 2800, easing: E.out });
 
-    // 3. the opening words, caught by light (Arabic right to left, English left to right)
-    const B = 3300;
-    const bism = $('bism');                       // every version opens with the Bismillah in calligraphy, its meaning beneath
-    wipe(bism, B, 1700, 'rtl');
-    anim(bism.querySelector('.glint i'), [{ transform: 'translateX(300%)' }, { transform: 'translateX(-130%)' }], { delay: B + 150, duration: 1700, easing: E.wipe, fill: 'none' });
-    fadeUp($('meaning'), B + 1350);
-    fadeUp($('heroLines'), B + 1750, 1100);
-    // 4. "with" has appeared between the names; now the names, bride first
-    wipe($('bride'), 4600, 1000, 'ltr');
-    fadeIn($('brideP'), 5100);
-    wipe($('groom'), 5250, 1000, 'ltr');
-    fadeIn($('groomP'), 5750);
-    // 5. the open gold ring of the logo turns into place around the date
-    anim($('arc'), [{ opacity: 0, transform: 'rotate(-28deg)' }, { opacity: 1, transform: 'none' }], { delay: 5900, duration: 1400, easing: E.out });
-    fadeUp($('dateText'), 6100);
-    if ($('hijri')) fadeIn($('hijri'), 6300);
-    fadeIn($('times'), 6450);
-    fadeIn($('venueLine'), 6850);
-    fadeIn($('dateHint'), 7250);
+  }
+
+  function mobileOpening() {
+    fadeIn(hero, 700, 500);
+    fadeIn(courtImg, 650, 500);
+    anim($('hint'), [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
+    anim($('for'), [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
+    anim(seal, [{ opacity: 1 }, { opacity: 0 }], { duration: 350 });
+    // Flat movement avoids nested 3D layers and camera scaling on phone GPUs.
+    anim($('leafL'), [{ transform: 'none', opacity: 1 }, { transform: 'translateX(-65%)', opacity: 0 }], { delay: 100, duration: 850, easing: E.out });
+    anim($('leafR'), [{ transform: 'none', opacity: 1 }, { transform: 'translateX(65%)', opacity: 0 }], { delay: 100, duration: 850, easing: E.out });
+    anim(stage, [{ opacity: 1 }, { opacity: 0 }], { delay: 650, duration: 600, easing: 'ease-out' });
   }
 
   function gentle() {
     anim(seal, [{ opacity: 1 }, { opacity: 0 }], { duration: 350, easing: 'ease-out' });
-    anim(stage, [{ opacity: 1 }, { opacity: 0 }], { duration: 900, easing: 'ease-in-out' });
-    anim(hero, [{ opacity: 0 }, { opacity: 1 }], { delay: 400, duration: 1000, easing: 'ease-out' });
-    const seq = [['bism', 900], ['meaning', 1250], ['heroLines', 1400], ['bride', 1550], ['brideP', 1750], ['joint', 1850], ['groom', 1950], ['groomP', 2150], ['arc', 2400], ['dateText', 2500], ['hijri', 2600], ['times', 2700], ['venueLine', 2900], ['dateHint', 3100]]
-      .filter(([id]) => $(id));
-    for (const [id, d] of seq) fadeIn($(id), d, 800);
+    anim(stage, [{ opacity: 1 }, { opacity: 0 }], { duration: 350, easing: 'ease-out' });
+    fadeIn(hero, 150, 200);
+    fadeIn(courtImg, 150, 200);
+  }
+
+  function fitNames() {
+    for (const id of ['bride', 'groom']) {
+      const el = $(id), text = el.querySelector('.con');
+      el.style.fontSize = '';
+      const range = document.createRange();
+      range.selectNodeContents(text);
+      const width = range.getBoundingClientRect().width;
+      const available = el.getBoundingClientRect().width * 0.94;
+      if (width > available) el.style.fontSize = `${parseFloat(getComputedStyle(el).fontSize) * available / width}px`;
+    }
+  }
+  let nameResize = 0;
+  addEventListener('resize', () => {
+    cancelAnimationFrame(nameResize);
+    nameResize = requestAnimationFrame(fitNames);
+  });
+
+  async function revealOpening(delay) {
+    const wait = document.body.animate([{ opacity: 1 }, { opacity: 1 }], { duration: 1, delay: Math.max(0, delay - (performance.now() - t0)) });
+    running.push({ el: document.body, a: wait });
+    try { await wait.finished; } catch (e) { return; }
+    const topImage = $('bism').querySelector('img');
+    if (topImage.decode) { try { await topImage.decode(); } catch (e) {} }
+    // Each step waits for the previous fade to finish, including when a phone drops frames.
+    const sequence = [['bism', 500], ['meaning', 250], ['heroLines', 350], ['bride', 450], ['brideP', 200],
+      ['joint', 250], ['groom', 450], ['groomP', 200], ['dateText', 300], ['hijri', 150],
+      ['times', 250], ['venueLine', 300], ['dateHint', 180], ['cueText', 180]];
+    for (const [id, duration] of sequence) {
+      if (settled) return;
+      const el = $(id);
+      if (!el || (el.matches('.parent') && !el.textContent.trim())) continue;
+      if (id === 'bride') {
+        await Promise.race([fontReady, new Promise(resolve => setTimeout(resolve, 3000))]);
+        if (settled) return;
+        // Pin a stable fallback if the script font is unavailable; a late font must not move the names.
+        if (document.fonts && !document.fonts.check('40px "Great Vibes"')) $('names').style.setProperty('--script', 'var(--display)');
+        fitNames();
+      }
+      const a = el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: REDUCED ? 120 : duration, easing: 'ease-out', fill: 'both' });
+      running.push({ el, a });
+      if (document.hidden) a.pause();
+      try { await a.finished; } catch (e) { return; }
+    }
+    if (!settled) settle();
   }
 
   function open(e) {
-    if (opened) { skip(); return; }
+    if (opened) return;
     opened = true;
-    openedAt = performance.now();
     clearTimeout(idleTimer);
     startAudio();                              // synchronously inside the gesture
     prime();
@@ -378,9 +383,10 @@
     stageHadFocus = document.activeElement === stage;
     t0 = performance.now();
     try { if (navigator.vibrate) navigator.vibrate([12, 60, 18]); } catch (err) {}
-    REDUCED ? gentle() : cinematic();
-    const end = launch();
-    if (!REDUCED) {                            // petals and gold leaf come through the doorway with the light
+    REDUCED ? gentle() : MOBILE ? mobileOpening() : cinematic();
+    launch();
+    revealOpening(REDUCED ? 350 : MOBILE ? 1250 : 3400);
+    if (!REDUCED && !MOBILE) {                  // phones keep the opening clear while the words appear
       const s = seal.getBoundingClientRect(), b = stage.querySelector('.box').getBoundingClientRect();
       const k = Math.min(1.6, innerWidth / 390);
       setTimeout(() => {
@@ -390,25 +396,8 @@
         petals.rain(Math.round(44 * k), { spread: 900, life: [2.4, 0.9] });
       }, 700);
     }
-    const marker = document.body.animate([{ opacity: 1 }, { opacity: 1 }], { duration: 1, delay: end + 60 });
-    running.push({ el: document.body, a: marker });
-    marker.finished.then(settle).catch(() => {});
   }
   let stageHadFocus = false;
-
-  // a second tap during the intro: the doorway freezes and dissolves, the finished invitation fades in
-  function skip() {
-    if (settled || skipping || performance.now() - openedAt < 350) return;
-    skipping = true;
-    plan.length = 0;
-    for (const r of running) {
-      try { if (stage.contains(r.el)) r.a.pause(); else r.a.cancel(); } catch (e) {}
-    }
-    stage.style.pointerEvents = 'none';
-    const out = stage.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 380, easing: 'ease-out', fill: 'forwards' });
-    hero.animate([{ opacity: 0.2 }, { opacity: 1 }], { duration: 420, easing: 'ease-out' });
-    out.finished.then(settle).catch(settle);
-  }
 
   function settle() {
     if (settled) return;
@@ -459,7 +448,6 @@
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
   });
   if (window.INVITE_TAPPED) setTimeout(open, 0);   // tapped while the script was still on its way (weak wifi); after init
-  document.addEventListener('click', (e) => { if (opened && !settled && !stage.contains(e.target)) skip(); });
 
   /* ------------------------------------------------------------------ the music control keeps to a free corner:
      it shows only while nothing is underneath it (and hides while you scroll down to read) */
@@ -587,12 +575,12 @@
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       root.classList.add('paused');
-      running.forEach((r) => { try { r.a.pause(); } catch (e) {} });
+      running.forEach((r) => { try { if (r.a.playState === 'running') r.a.pause(); } catch (e) {} });
       wasPlaying = !audio.paused;
       if (wasPlaying) audio.pause();
     } else {
       root.classList.remove('paused');
-      if (!skipping) running.forEach((r) => { try { r.a.play(); } catch (e) {} });
+      running.forEach((r) => { try { if (r.a.playState === 'paused') r.a.play(); } catch (e) {} });
       if (wasPlaying && !muted) play();
       tick();
     }
