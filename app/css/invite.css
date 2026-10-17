@@ -137,13 +137,13 @@ html.js:not(.primed) .court-bg { visibility: hidden; }
 /* the Bismillah in its arch-shaped (dome) composition, filling the pointed top of the stele's inner arch */
 .bism { left: calc(103 * var(--u)); top: calc(64 * var(--u)); width: calc(184 * var(--u)); height: calc(110.4 * var(--u)); }
 .bism img { width: 100%; height: 100%; }
-/* the English-only versions carry no Arabic: a gilded rosette sits in the arch instead */
-.bism--orn { left: calc(165 * var(--u)); top: calc(96 * var(--u)); width: calc(60 * var(--u)); height: calc(60 * var(--u)); }
+/* the English-only versions carry the couple's original monogram in the arch */
+.bism--logo { left: calc(151 * var(--u)); top: calc(80 * var(--u)); width: calc(88 * var(--u)); height: calc(80.27 * var(--u)); }
 .glint {
   position: absolute; inset: 0; overflow: hidden; pointer-events: none;
   -webkit-mask: url(../img/bismillah-arch.webp) center / 100% 100% no-repeat; mask: url(../img/bismillah-arch.webp) center / 100% 100% no-repeat;
 }
-.bism--orn .glint { -webkit-mask-image: url(../img/rosette.webp); mask-image: url(../img/rosette.webp); }
+.bism--logo .glint { -webkit-mask-image: url(../img/rz-monogram.svg); mask-image: url(../img/rz-monogram.svg); }
 .sheen {
   position: absolute; inset: 0; overflow: hidden; pointer-events: none;
   -webkit-mask: url(../img/rz-monogram.svg) center / 100% 100% no-repeat; mask: url(../img/rz-monogram.svg) center / 100% 100% no-repeat;
