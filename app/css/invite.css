@@ -439,9 +439,9 @@ html.no-js .countdown { display: none; }
 
 .hall-top { position: relative; height: calc(440 * var(--v)); margin: 0 calc(-30 * var(--v)); pointer-events: none; }
 .arch { position: absolute; z-index: 3; left: 0; top: -1px; width: calc(390 * var(--v)); height: calc(340 * var(--v)); }
-.sp-rosette { position: absolute; z-index: 4; top: calc(40 * var(--v)); width: calc(28 * var(--v)); height: auto; }
-.sp-rosette.l { left: calc(46 * var(--v)); }
-.sp-rosette.r { right: calc(46 * var(--v)); }
+.sp-sprig { position: absolute; z-index: 4; top: calc(31 * var(--v)); width: calc(27 * var(--v)); height: auto; }
+.sp-sprig.l { left: calc(46 * var(--v)); }
+.sp-sprig.r { right: calc(46 * var(--v)); transform: scaleX(-1); }
 .ladi {
   position: absolute; z-index: 2; left: calc((var(--x) - var(--ox)) * var(--v)); top: calc(var(--y) * var(--v) - 4px);
   width: calc(var(--w) * var(--v)); height: calc(var(--h) * var(--v));
